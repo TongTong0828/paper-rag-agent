@@ -59,34 +59,37 @@ to reproduce that environment locally.
 
 ## Architecture
 
-```
-        Frontend (Next.js)         /workspace/paper-rag
-              │
-              ▼
-   ┌──────────────────────────┐
-   │ DeerFlow Gateway         │   FastAPI
-   │   8 middleware layers    │   BodySize → GZip → RequestId → AccessLog
-   │   paper_rag router       │   → Prometheus → RateLimit → Timeout → Auth
-   │   19 endpoints           │
-   └──────────┬───────────────┘
-              │
-              ▼
-   ┌──────────────────────────┐
-   │ paper_rag package        │
-   │   rag/    deliver/       │
-   │   retrieve/  wiki/       │
-   │   store/  proactive/     │
-   │   feedback/              │
-   └────┬─────────────┬───────┘
-        ▼             ▼
-     Qdrant       SQLite × 2
-    (vectors)    (papers + feedback)
+```mermaid
+flowchart TB
+    FE[Frontend / Next.js<br/><sub>workspace/paper-rag</sub>] -->|HTTPS| GW
 
-   APScheduler sidecar  →  webhook fan-out
-   (daily 08:00,           (DingTalk / Feishu /
-    Mon 09:00)              WeCom / Email)
+    subgraph GW [DeerFlow Gateway · FastAPI]
+        direction TB
+        MW[8 middleware layers<br/><sub>BodySize → GZip → RequestId → AccessLog<br/>→ Prometheus → RateLimit → Timeout → Auth</sub>]
+        ROUTER[paper_rag router<br/>19 endpoints]
+        MW --> ROUTER
+    end
 
-   Prometheus (15s scrape) → Grafana (13 panels) + alertmanager (13 rules)
+    GW --> PKG
+
+    subgraph PKG [paper_rag package]
+        direction LR
+        RAG[rag/<br/>retrieve/]
+        DEL[deliver/<br/>wiki/]
+        STORE[store/<br/>feedback/]
+        PROACT[proactive/]
+    end
+
+    PKG --> QDR[(Qdrant<br/>vectors)]
+    PKG --> SQL[(SQLite × 2<br/>papers + feedback)]
+
+    CRON[APScheduler sidecar<br/><sub>daily 08:00 · Mon 09:00</sub>] -->|fan-out| HOOKS[DingTalk · Feishu<br/>WeCom · Email]
+    CRON -.reads.- SQL
+
+    PROM[Prometheus<br/>15s scrape] -->|metrics| GRA[Grafana<br/>13 panels]
+    PROM --> AM[alertmanager<br/>13 rules]
+    GW -.scrapes.- PROM
+    PKG -.scrapes.- PROM
 ```
 
 The gateway and middleware live in the deer-flow monorepo. A snapshot of
@@ -97,29 +100,49 @@ is reproduced under [`docs/integration/`](docs/integration/) for reference.
 
 ## Request flow (typical QA)
 
-```
-POST /api/paper_rag/qa  (SSE)
-  │
-  ├─ 8 gateway middlewares
-  │     RequestId, AccessLog, Prometheus, RateLimit, Timeout (SSE bypass), Auth
-  │
-  ├─ qa_stream._retrieve_round
-  │     query_rewrite (LLM, fail-open)
-  │     hybrid_search (BM25 FTS5 + Qdrant, RRF)
-  │     rerank (BGE-reranker-v2-m3)
-  │
-  ├─ abstain.decide(chunks, low=0.21, high=0.48)
-  │     < 0.21       → canned reply, skip LLM
-  │     0.21 – 0.48  → LLM with insufficiency hint
-  │     ≥ 0.48       → normal answer
-  │
-  ├─ validate_citations + detect_suspicious
-  │
-  └─ on SSE close → paper_access.touch_many() (async)
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as Client
+    participant GW as Gateway (8 mw)
+    participant QA as qa_stream
+    participant RET as retrieve
+    participant ABS as abstain
+    participant LLM as LLM
+
+    U->>GW: POST /api/paper_rag/qa (SSE)
+    GW->>GW: RequestId · AccessLog · Prometheus<br/>RateLimit · Timeout (SSE bypass) · Auth
+    GW->>QA: dispatch with user_id
+
+    loop _retrieve_round
+        QA->>RET: rewrite + hybrid_search<br/>(BM25 FTS5 + Qdrant, RRF)
+        RET->>QA: candidates
+        QA->>RET: rerank (BGE-reranker-v2-m3)
+        RET->>QA: top_k chunks
+    end
+
+    QA->>ABS: decide(chunks, low=0.21, high=0.48)
+    alt score < 0.21
+        ABS-->>QA: no_evidence — canned reply
+        QA-->>U: SSE done (LLM skipped)
+    else 0.21 ≤ score < 0.48
+        ABS-->>QA: weak — inject hint
+        QA->>LLM: chat(hint + evidence)
+        LLM-->>QA: answer
+        QA-->>U: SSE stream
+    else score ≥ 0.48
+        ABS-->>QA: confident
+        QA->>LLM: chat(evidence)
+        LLM-->>QA: answer
+        QA-->>U: SSE stream
+    end
+
+    QA->>QA: validate_citations + detect_suspicious
+    QA-->>QA: paper_access.touch_many() (async)
 ```
 
 See [`docs/diagrams/abstain_flow.md`](docs/diagrams/abstain_flow.md) for the
-mermaid sequence diagram and [`docs/SYSTEM_DESIGN.md`](docs/SYSTEM_DESIGN.md)
+full mermaid sequence diagram and [`docs/SYSTEM_DESIGN.md`](docs/SYSTEM_DESIGN.md)
 for a longer walkthrough.
 
 ---

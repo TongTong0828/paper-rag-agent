@@ -31,6 +31,12 @@ Industrial properties
 - ≤ 3s timeout per request, max 1 retry
 - HMAC where supported (DingTalk SHA256+timestamp, Feishu sign)
 - All HTTP via stdlib ``urllib`` — no httpx dep added for this small surface
+
+Adding a new channel
+--------------------
+Define a function ``(endpoint, secret, item) -> (bool, str)`` and decorate it
+with ``@register("<name>")``. ``_DISPATCH`` and ``add_webhook``'s allow-list
+are kept in sync automatically.
 """
 from __future__ import annotations
 
@@ -44,6 +50,7 @@ import sqlite3
 import time
 import urllib.parse
 import urllib.request
+from collections.abc import Callable
 from contextlib import contextmanager
 from email.mime.text import MIMEText
 from pathlib import Path
@@ -63,6 +70,22 @@ CREATE TABLE IF NOT EXISTS user_webhooks (
     PRIMARY KEY (user_id, channel, endpoint)
 );
 """
+
+# A channel sender takes (endpoint, secret, item) and returns (ok, detail).
+SenderFn = Callable[[str, str | None, dict], tuple[bool, str]]
+
+# Registry. Kept as a module-level dict for backward compat — tests
+# monkey-patch _DISPATCH["dingtalk"] directly. New channels should register
+# via the decorator below rather than poking the dict.
+_DISPATCH: dict[str, SenderFn] = {}
+
+
+def register(channel: str) -> Callable[[SenderFn], SenderFn]:
+    """Decorator: register a channel sender into _DISPATCH."""
+    def _decorate(fn: SenderFn) -> SenderFn:
+        _DISPATCH[channel] = fn
+        return fn
+    return _decorate
 
 
 def _resolve_path() -> Path:
@@ -90,8 +113,8 @@ def _connect() -> Iterator[sqlite3.Connection]:
 
 
 def add_webhook(user_id: str, channel: str, endpoint: str, secret: str | None = None) -> bool:
-    if channel not in ("dingtalk", "feishu", "wecom", "email"):
-        raise ValueError(f"unsupported channel: {channel}")
+    if channel not in _DISPATCH:
+        raise ValueError(f"unsupported channel: {channel} (known: {sorted(_DISPATCH)})")
     with _connect() as con:
         con.execute(
             "INSERT OR REPLACE INTO user_webhooks(user_id, channel, endpoint, secret, "
@@ -121,7 +144,7 @@ def disable_webhook(user_id: str, channel: str, endpoint: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Channel adapters
+# HTTP helper
 # ---------------------------------------------------------------------------
 
 
@@ -137,6 +160,21 @@ def _post_json(url: str, payload: dict) -> tuple[int, str]:
         return resp.status, resp.read(2000).decode("utf-8", errors="replace")
 
 
+def _post_safe(url: str, payload: dict) -> tuple[bool, str]:
+    """``_post_json`` + standard error mapping shared by HTTP-style channels."""
+    try:
+        status, body = _post_json(url, payload)
+        return status == 200, f"{status}:{body[:120]}"
+    except Exception as e:  # noqa: BLE001 — adapter-level isolation
+        return False, f"{type(e).__name__}:{e}"
+
+
+# ---------------------------------------------------------------------------
+# Channel adapters — register() keeps _DISPATCH in sync
+# ---------------------------------------------------------------------------
+
+
+@register("dingtalk")
 def _send_dingtalk(endpoint: str, secret: str | None, item: dict) -> tuple[bool, str]:
     """DingTalk markdown msg with optional HMAC sign."""
     url = endpoint
@@ -153,13 +191,10 @@ def _send_dingtalk(endpoint: str, secret: str | None, item: dict) -> tuple[bool,
             "text": f"### {item.get('title', '')}\n\n{item.get('body_md', '')[:2000]}",
         },
     }
-    try:
-        status, body = _post_json(url, payload)
-        return status == 200, f"{status}:{body[:120]}"
-    except Exception as e:  # noqa: BLE001
-        return False, f"{type(e).__name__}:{e}"
+    return _post_safe(url, payload)
 
 
+@register("feishu")
 def _send_feishu(endpoint: str, secret: str | None, item: dict) -> tuple[bool, str]:
     """Feishu / Lark markdown card."""
     payload: dict[str, Any] = {
@@ -177,26 +212,20 @@ def _send_feishu(endpoint: str, secret: str | None, item: dict) -> tuple[bool, s
         h = hmac.new(sign_str.encode(), b"", hashlib.sha256).digest()
         payload["timestamp"] = ts
         payload["sign"] = base64.b64encode(h).decode()
-    try:
-        status, body = _post_json(endpoint, payload)
-        return status == 200, f"{status}:{body[:120]}"
-    except Exception as e:  # noqa: BLE001
-        return False, f"{type(e).__name__}:{e}"
+    return _post_safe(endpoint, payload)
 
 
+@register("wecom")
 def _send_wecom(endpoint: str, _secret: str | None, item: dict) -> tuple[bool, str]:
     """WeCom (企业微信) markdown."""
     payload = {
         "msgtype": "markdown",
         "markdown": {"content": f"## {item.get('title', '')}\n\n{item.get('body_md', '')[:2000]}"},
     }
-    try:
-        status, body = _post_json(endpoint, payload)
-        return status == 200, f"{status}:{body[:120]}"
-    except Exception as e:  # noqa: BLE001
-        return False, f"{type(e).__name__}:{e}"
+    return _post_safe(endpoint, payload)
 
 
+@register("email")
 def _send_email(endpoint: str, _secret: str | None, item: dict) -> tuple[bool, str]:
     """endpoint format: ``smtp://host:port/?user=...&from=...&to=...``"""
     try:
@@ -218,16 +247,8 @@ def _send_email(endpoint: str, _secret: str | None, item: dict) -> tuple[bool, s
                 s.login(q["user"], q["password"])
             s.send_message(msg)
         return True, f"sent->{receiver}"
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:  # noqa: BLE001 — adapter-level isolation
         return False, f"{type(e).__name__}:{e}"
-
-
-_DISPATCH = {
-    "dingtalk": _send_dingtalk,
-    "feishu": _send_feishu,
-    "wecom": _send_wecom,
-    "email": _send_email,
-}
 
 
 # ---------------------------------------------------------------------------
@@ -275,4 +296,4 @@ def fan_out(item: dict) -> dict[str, Any]:
     return {"sent": sent, "results": results}
 
 
-__all__ = ["add_webhook", "list_webhooks", "disable_webhook", "fan_out"]
+__all__ = ["add_webhook", "disable_webhook", "fan_out", "list_webhooks", "register"]

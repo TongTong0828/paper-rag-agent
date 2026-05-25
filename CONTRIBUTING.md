@@ -7,8 +7,14 @@
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e .[dev,mineru]
-pre-commit install   # 可选，需要先 `pip install pre-commit`
+
+# Strongly recommended — runs the same ruff rules CI does on every commit:
+pip install pre-commit
+pre-commit install
 ```
+
+The `.pre-commit-config.yaml` mirrors `.github/workflows/ci.yml`, so a clean
+`pre-commit run --all-files` is a reliable predictor of a green CI run.
 
 ## 分支与提交
 

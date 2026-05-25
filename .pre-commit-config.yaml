@@ -1,10 +1,20 @@
+# Run locally:
+#   pip install pre-commit && pre-commit install
+#
+# This config matches what CI runs (.github/workflows/ci.yml), so a clean
+# `pre-commit run --all-files` should mean a green CI run too.
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.10
+    rev: v0.15.14
     hooks:
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
-      - id: ruff-format
+        # Mirror CI: focus on real bugs (E/F/W) + import order (I).
+        # Auto-fix what's safe, fail otherwise.
+        args:
+          - --select=E,F,W,I
+          - --ignore=E501
+          - --fix
+          - --exit-non-zero-on-fix
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
@@ -17,3 +27,5 @@ repos:
       - id: check-added-large-files
         args: [--maxkb=2048]
       - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
