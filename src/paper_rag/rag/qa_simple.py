@@ -48,3 +48,8 @@ def answer(question: str, *, top_k: int = 8, paper_ids: list[str] | None = None)
         "chunks": chunks,
         "suspicious_citations": suspicious,
     }
+
+
+__all__ = [
+    "answer",
+]

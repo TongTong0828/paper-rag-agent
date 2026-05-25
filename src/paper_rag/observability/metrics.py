@@ -4,12 +4,19 @@ Light-weight: counters + histograms in plain Python dicts, lock-protected.
 No prometheus_client dependency — we render the wire format ourselves.
 
 Why not prometheus_client?
-- We want zero hard deps.
-- We can't run an HTTP server in every host (some are CLI-only).
-- The `render()` function returns the standard text format any scraper / sidecar can consume.
+--------------------------
+- We want zero hard runtime deps.
+- Our deployment is single-process gateway + an APScheduler sidecar; we
+  do NOT need multiprocess mode, exemplars, or process_collector.
+- ``render()`` produces the standard text exposition any scraper consumes.
 
-Usage:
+If the deployment ever needs the prometheus_client features (multiproc,
+exemplars), the public ``counter / histogram / render`` API is small
+enough to swap in a wrapper around ``prometheus_client.Counter`` etc.
+without touching call sites. See ADR-0020 for the original decision.
 
+Usage
+-----
     from paper_rag.observability.metrics import counter, histogram, render
 
     counter("paper_rag_qa_total", labels={"intent": "factual", "stop": "answered"}).inc()
@@ -22,8 +29,8 @@ from __future__ import annotations
 
 import threading
 import time
-from collections.abc import Iterable
 from contextlib import contextmanager
+from typing import Iterable
 
 _LOCK = threading.Lock()
 _COUNTERS: dict[tuple[str, frozenset], float] = {}

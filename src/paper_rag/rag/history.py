@@ -134,3 +134,10 @@ def rewrite_with_history(question: str, conversation_id: str | None) -> str:
     except Exception as e:
         log.warning(f"history rewrite failed: {e}; using original question")
         return question
+
+
+__all__ = [
+    "append",
+    "recent",
+    "rewrite_with_history",
+]

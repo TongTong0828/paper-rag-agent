@@ -30,3 +30,8 @@ def wiki_lookup(input: WikiLookupInput) -> dict:
         log.warning(f"wiki_lookup near miss skipped: {e}")
         candidates = []
     return {"hit": False, "near_misses": candidates}
+
+
+__all__ = [
+    "wiki_lookup",
+]

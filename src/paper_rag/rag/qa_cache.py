@@ -126,3 +126,9 @@ def _evict(key: str) -> None:
 
 def _enabled() -> bool:
     return cfg.load().rag.qa_cache_enabled
+
+
+__all__ = [
+    "get",
+    "put",
+]

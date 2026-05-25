@@ -23,10 +23,9 @@ import logging
 import os
 import sqlite3
 import time
-from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 from .events import FeedbackEvent
 
@@ -195,9 +194,9 @@ def purge_older_than(epoch: float) -> int:
 
 
 __all__ = [
+    "write",
+    "list_recent",
     "aggregate_user",
     "iter_since",
-    "list_recent",
     "purge_older_than",
-    "write",
 ]

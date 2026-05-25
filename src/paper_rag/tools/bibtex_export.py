@@ -87,3 +87,9 @@ def export_bibtex(input: BibtexExportInput) -> dict:
         "n_exported": len(found),
         "missing": missing,
     }
+
+
+__all__ = [
+    "BibtexExportInput",
+    "export_bibtex",
+]

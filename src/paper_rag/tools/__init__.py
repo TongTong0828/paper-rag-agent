@@ -29,4 +29,4 @@ def __getattr__(name: str):
     raise AttributeError(name)
 
 
-__all__ = ["export_bibtex", "paper_compare", "paper_qa", "paper_search", "paper_section", "wiki_lookup"]
+__all__ = ["paper_qa", "paper_search", "paper_section", "paper_compare", "wiki_lookup", "export_bibtex"]

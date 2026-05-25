@@ -72,4 +72,4 @@ def dispatch(
     raise DeliverError(f"unreachable: {format}")  # pragma: no cover
 
 
-__all__ = ["SUPPORTED_FORMATS", "DeliverError", "DeliverableResult", "dispatch"]
+__all__ = ["dispatch", "DeliverableResult", "DeliverError", "SUPPORTED_FORMATS"]

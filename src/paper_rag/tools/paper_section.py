@@ -38,3 +38,8 @@ def paper_section(input: PaperSectionInput) -> dict:
             for c in chunks
         ],
     }
+
+
+__all__ = [
+    "paper_section",
+]

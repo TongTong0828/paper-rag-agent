@@ -55,3 +55,8 @@ def classify(question: str) -> dict:
     out = {"intent": intent, **_DEFAULTS[intent]}
     log.info(f"intent={intent} cfg={out}")
     return out
+
+
+__all__ = [
+    "classify",
+]

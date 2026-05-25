@@ -53,3 +53,8 @@ def rewrite(question: str) -> dict:
     if hyde:
         queries_dense.append(hyde)
     return {"dense_queries": queries_dense, "bm25_query": keywords, "raw": data}
+
+
+__all__ = [
+    "rewrite",
+]

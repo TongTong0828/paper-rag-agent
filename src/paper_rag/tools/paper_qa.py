@@ -10,3 +10,8 @@ def paper_qa(input: PaperQAInput) -> dict:
     """Answer a question with cited chunks. Internally agentic
     (intent -> rewrite -> hybrid retrieve -> rerank -> reflect -> iterate)."""
     return answer(input.question, paper_ids=input.paper_ids)
+
+
+__all__ = [
+    "paper_qa",
+]

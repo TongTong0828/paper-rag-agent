@@ -78,7 +78,7 @@ def stale_scan_for_user(
         try:
             from paper_rag.observability.metrics import counter
             counter("paper_rag_proactive_stale_card_total").inc()
-        except Exception:
+        except Exception:  # noqa: BLE001
             pass
     log.info("stale_scan: user=%s n_written=%d", user_id, n_written)
     return n_written
@@ -103,4 +103,4 @@ def stale_scan_for_all_users(*, older_than_days: int = 30, max_cards: int = 3) -
     }
 
 
-__all__ = ["stale_scan_for_all_users", "stale_scan_for_user"]
+__all__ = ["stale_scan_for_user", "stale_scan_for_all_users"]

@@ -41,10 +41,24 @@ def setup_logger(level: str = "INFO", json: bool = False) -> None:
 
 
 def get_logger(name: str | None = None):
+    """Return a project-prefixed logger.
+
+    All loggers live under the ``paper_rag.`` namespace so external log
+    shippers (ELK, Loki) can filter on a single prefix. Callers that pass
+    a short name like ``"rag.qa_agentic"`` get auto-prefixed to
+    ``"paper_rag.rag.qa_agentic"``. Callers that already pass a fully
+    qualified name (starts with ``paper_rag.``) are left as-is.
+    """
     if not _INITIALIZED:
         setup_logger()
+    if name is None:
+        full_name = "paper_rag"
+    elif name == "paper_rag" or name.startswith("paper_rag."):
+        full_name = name
+    else:
+        full_name = f"paper_rag.{name}"
     if _USE_LOGURU:
         from loguru import logger
 
-        return logger.bind(scope=name) if name else logger
-    return logging.getLogger(name or "paper_rag")
+        return logger.bind(scope=full_name)
+    return logging.getLogger(full_name)

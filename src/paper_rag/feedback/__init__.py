@@ -21,10 +21,10 @@ from .collector import recent_events, record_event, user_stats
 from .events import EVENT_TYPES, FeedbackEvent, validate_payload
 
 __all__ = [
-    "EVENT_TYPES",
     "FeedbackEvent",
-    "recent_events",
-    "record_event",
-    "user_stats",
+    "EVENT_TYPES",
     "validate_payload",
+    "record_event",
+    "recent_events",
+    "user_stats",
 ]

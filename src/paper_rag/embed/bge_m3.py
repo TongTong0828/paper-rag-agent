@@ -6,7 +6,7 @@ stays cheap. Only `dense` vectors are exposed for now.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from typing import Iterable
 
 from .. import config as cfg
 from ..utils.logger import get_logger

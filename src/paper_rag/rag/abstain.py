@@ -42,7 +42,7 @@ Industrial-grade properties
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from typing import Iterable
 
 # Type alias for clarity
 Decision = str  # one of: confident | weak_evidence | no_evidence | no_chunks
@@ -146,6 +146,45 @@ def evidence_score(
     return sum(raw_scores) / len(raw_scores), field_used, len(raw_scores)
 
 
+def _classify(
+    *,
+    enabled: bool,
+    field_used: str | None,
+    score: float,
+    threshold_low: float,
+    threshold_high: float,
+) -> tuple[str, str]:
+    """Pure decision: given the calibration inputs, return (decision, signal_quality).
+
+    Split out so the threshold table can be unit-tested independently of the
+    score-extraction code in evidence_score(). 6 branches, no I/O.
+    """
+    if not enabled:
+        return DECISION_CONFIDENT, "disabled"
+    if field_used is None:
+        # No usable score field — fail open rather than block the pipeline.
+        return DECISION_CONFIDENT, "missing"
+    if field_used in LOW_QUALITY_FIELDS:
+        # Rank-based / unbounded scores (BM25/RRF) are unreliable for the
+        # "low average means out-of-domain" hypothesis. Fail open and surface
+        # the degraded state via signal_quality.
+        return DECISION_CONFIDENT, "low_degraded"
+    if score < threshold_low:
+        return DECISION_NO_EVIDENCE, "high"
+    if score < threshold_high:
+        return DECISION_WEAK, "high"
+    return DECISION_CONFIDENT, "high"
+
+
+def _top_chunk_score(chunks: list[dict], field_used: str | None) -> float:
+    if field_used is None or not chunks:
+        return 0.0
+    try:
+        return _normalize(float(chunks[0].get(field_used, 0.0) or 0.0), field_used)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def decide(
     chunks: list[dict],
     *,
@@ -195,36 +234,14 @@ def decide(
     score, field_used, _ = evidence_score(
         chunks, score_fields=score_fields, min_chunks=min_chunks
     )
-    top_score = 0.0
-    if field_used is not None:
-        try:
-            top_score = _normalize(float(chunks[0].get(field_used, 0.0) or 0.0), field_used)
-        except (TypeError, ValueError):
-            top_score = 0.0
-
-    if not enabled:
-        decision = DECISION_CONFIDENT
-        signal_quality = "disabled"
-    elif field_used is None:
-        # No usable score field — fail open (confident) rather than block the
-        # pipeline. We log the metric so this is visible in production.
-        decision = DECISION_CONFIDENT
-        signal_quality = "missing"
-    elif field_used in LOW_QUALITY_FIELDS:
-        # Rank-based or unbounded scores (BM25/RRF) are unreliable for the
-        # "low average means out-of-domain" hypothesis. Fail open and surface
-        # the degraded state in the trace; counters can alert on this.
-        decision = DECISION_CONFIDENT
-        signal_quality = "low_degraded"
-    elif score < threshold_low:
-        decision = DECISION_NO_EVIDENCE
-        signal_quality = "high"
-    elif score < threshold_high:
-        decision = DECISION_WEAK
-        signal_quality = "high"
-    else:
-        decision = DECISION_CONFIDENT
-        signal_quality = "high"
+    top_score = _top_chunk_score(chunks, field_used)
+    decision, signal_quality = _classify(
+        enabled=enabled,
+        field_used=field_used,
+        score=score,
+        threshold_low=threshold_low,
+        threshold_high=threshold_high,
+    )
 
     return {
         "decision": decision,
@@ -249,11 +266,11 @@ WEAK_EVIDENCE_HINT = (
 
 
 __all__ = [
-    "DECISION_CONFIDENT",
-    "DECISION_NO_CHUNKS",
-    "DECISION_NO_EVIDENCE",
-    "DECISION_WEAK",
-    "WEAK_EVIDENCE_HINT",
     "decide",
     "evidence_score",
+    "WEAK_EVIDENCE_HINT",
+    "DECISION_CONFIDENT",
+    "DECISION_WEAK",
+    "DECISION_NO_EVIDENCE",
+    "DECISION_NO_CHUNKS",
 ]

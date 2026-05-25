@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterable
-from typing import Any
+from typing import Any, Iterable
 
 from .. import config as cfg
 from ..utils.logger import get_logger

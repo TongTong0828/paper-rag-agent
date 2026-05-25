@@ -20,14 +20,12 @@ from __future__ import annotations
 
 from .. import config as cfg
 from ..retrieve.format import format_evidence
-from ..retrieve.hybrid import hybrid_search
-from ..retrieve.rerank import rerank
+from ..retrieve.pipeline import retrieve_round as _retrieve_round
 from ..utils.logger import get_logger
 from . import abstain as abstain_mod
 from .citation_check import detect_suspicious_citations, validate_citations
 from .intent_classifier import classify
 from .llm import chat
-from .query_rewrite import rewrite
 from .reflect import reflect
 
 log = get_logger("rag.qa_agentic")
@@ -48,23 +46,6 @@ _EMPTY_SUSPICIOUS: dict = {"numeric": [], "author_year": [], "count": 0}
 # ---------------------------------------------------------------------------
 # Stage helpers — each stage is independently unit-testable.
 # ---------------------------------------------------------------------------
-
-
-def _retrieve_round(query: str, paper_ids: list[str] | None, top_k: int) -> list[dict]:
-    """One round: hybrid search across rewritten queries -> rerank."""
-    rw = rewrite(query)
-    pooled: dict[str, dict] = {}
-    for q in rw["dense_queries"]:
-        for hit in hybrid_search(q, top_k=top_k, paper_ids=paper_ids):
-            cid = hit.get("chunk_id")
-            if not cid:
-                continue
-            if cid not in pooled or hit.get("score_rrf", 0) > pooled[cid].get("score_rrf", 0):
-                pooled[cid] = hit
-    candidates = list(pooled.values())
-    candidates.sort(key=lambda x: x.get("score_rrf", 0), reverse=True)
-    candidates = candidates[: top_k * 3]
-    return rerank(query, candidates, top_k=top_k)
 
 
 def _maybe_rewrite_with_history(question: str, conversation_id: str | None) -> str:

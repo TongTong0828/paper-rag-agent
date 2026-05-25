@@ -61,3 +61,9 @@ def detect_suspicious_citations(answer: str) -> dict:
         "author_year": author_year,
         "count": len(numeric) + len(author_year),
     }
+
+
+__all__ = [
+    "detect_suspicious_citations",
+    "validate_citations",
+]

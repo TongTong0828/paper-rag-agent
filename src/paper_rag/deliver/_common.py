@@ -150,8 +150,8 @@ def collect_metadata(bundles: list[PaperBundle], trace_id: str = "") -> dict[str
 
 __all__ = [
     "PaperBundle",
+    "fetch_paper_meta",
+    "fetch_paper_bundle",
     "aggregate_citations",
     "collect_metadata",
-    "fetch_paper_bundle",
-    "fetch_paper_meta",
 ]

@@ -30,3 +30,8 @@ def paper_search(input: PaperSearchInput) -> list[dict]:
             }
     ranked = sorted(by_paper.values(), key=lambda x: x["score"], reverse=True)
     return ranked[: input.top_k]
+
+
+__all__ = [
+    "paper_search",
+]

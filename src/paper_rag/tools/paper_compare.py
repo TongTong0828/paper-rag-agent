@@ -25,3 +25,8 @@ def paper_compare(input: PaperCompareInput) -> dict:
                 "citations": res["citations"],
             }
     return {"papers": input.paper_ids, "dimensions": input.dimensions, "matrix": matrix}
+
+
+__all__ = [
+    "paper_compare",
+]

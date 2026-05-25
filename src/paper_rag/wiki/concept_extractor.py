@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Iterable
+from typing import Iterable
 
 from ..rag.llm import chat
 from ..utils.logger import get_logger

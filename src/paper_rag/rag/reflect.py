@@ -51,3 +51,8 @@ def reflect(question: str, evidence: str) -> dict:
         "follow_up": data.get("follow_up", ""),
         "score": float(data.get("score", 0.5)),
     }
+
+
+__all__ = [
+    "reflect",
+]
