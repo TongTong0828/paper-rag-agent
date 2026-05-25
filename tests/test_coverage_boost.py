@@ -396,3 +396,257 @@ def test_metrics_histogram_time_context():
     hist = next(x for x in snap["histograms"] if x["name"] == "paper_rag_test_block_seconds")
     assert hist["count"] == 1
     assert hist["sum"] > 0
+
+
+# ---------------------------------------------------------------------------
+# ingest/dedup.py — pure functions
+# ---------------------------------------------------------------------------
+
+
+def test_dedup_normalize_title():
+    from paper_rag.ingest.dedup import normalize_title
+
+    assert normalize_title("Self-RAG: Learning") == "selfraglearning"
+    assert normalize_title("  Hello, World!  ") == "helloworld"
+    # Punctuation-only string collapses to empty
+    assert normalize_title("!!!") == ""
+    # Unicode handling — Chinese chars are kept as letters
+    assert normalize_title("中文 标题") == "中文标题"
+
+
+def test_dedup_is_done(monkeypatch):
+    import sys
+    import types
+
+    from paper_rag.ingest import dedup
+
+    fake = types.SimpleNamespace(get_paper=lambda pid: types.SimpleNamespace(status="done") if pid == "yes" else None)
+    monkeypatch.setitem(sys.modules, "paper_rag.store.sqlite_store", fake)
+
+    assert dedup.is_done("yes") is True
+    assert dedup.is_done("no") is False
+
+
+# ---------------------------------------------------------------------------
+# ingest/schema.py — Pydantic
+# ---------------------------------------------------------------------------
+
+
+def test_ingest_schema_minimal():
+    from paper_rag.ingest.schema import FetchResult, PaperMeta
+
+    m = PaperMeta(paper_id="arxiv:2310.11511", title="Self-RAG")
+    assert m.paper_id == "arxiv:2310.11511"
+    assert m.authors == []
+    assert m.source == "unknown"
+    assert m.fetched_at is not None  # default factory ran
+
+    r = FetchResult(meta=m, pdf_path="/tmp/x.pdf")
+    dump = r.model_dump()
+    assert dump["meta"]["paper_id"] == "arxiv:2310.11511"
+    assert dump["pdf_path"] == "/tmp/x.pdf"
+
+
+def test_ingest_schema_serializable_with_extra():
+    from paper_rag.ingest.schema import PaperMeta
+
+    m = PaperMeta(paper_id="x", title="t", extra={"k": [1, 2]}, urls=["http://a"])
+    assert m.model_dump()["extra"]["k"] == [1, 2]
+
+
+# ---------------------------------------------------------------------------
+# parse/dispatcher.py — fallback path
+# ---------------------------------------------------------------------------
+
+
+def test_parse_dispatcher_uses_pymupdf_when_mineru_disabled(monkeypatch, tmp_path):
+    from paper_rag import config as cfg_mod
+    from paper_rag.parse import dispatcher
+
+    fake_cfg = type(
+        "C", (),
+        {
+            "mineru": type("M", (), {"mode": "off", "fallback_to_pymupdf": True})(),
+        },
+    )()
+    monkeypatch.setattr(cfg_mod, "load", lambda: fake_cfg)
+
+    import sys
+    import types
+    fake_pymupdf = types.SimpleNamespace(parse_pdf=lambda pid, p: tmp_path / "out")
+    monkeypatch.setitem(
+        sys.modules, "paper_rag.parse.fallback_pymupdf", fake_pymupdf,
+    )
+    out, name = dispatcher.parse_pdf("p1", "/x.pdf")
+    assert name == "pymupdf"
+    assert out == tmp_path / "out"
+
+
+def test_parse_dispatcher_falls_back_when_mineru_raises(monkeypatch, tmp_path):
+    from paper_rag import config as cfg_mod
+    from paper_rag.parse import dispatcher
+
+    fake_cfg = type(
+        "C", (),
+        {
+            "mineru": type("M", (), {"mode": "local", "fallback_to_pymupdf": True})(),
+        },
+    )()
+    monkeypatch.setattr(cfg_mod, "load", lambda: fake_cfg)
+
+    import sys
+    import types
+
+    class _MinerErr(Exception):
+        pass
+
+    def _bad_parse(pid, p):
+        raise _MinerErr("mineru not installed")
+
+    fake_mineru = types.SimpleNamespace(MineruError=_MinerErr, parse_pdf=_bad_parse)
+    fake_pymupdf = types.SimpleNamespace(parse_pdf=lambda pid, p: tmp_path / "out")
+    monkeypatch.setitem(sys.modules, "paper_rag.parse.mineru_local", fake_mineru)
+    monkeypatch.setitem(sys.modules, "paper_rag.parse.fallback_pymupdf", fake_pymupdf)
+
+    out, name = dispatcher.parse_pdf("p1", "/x.pdf")
+    assert name == "pymupdf"
+    assert out == tmp_path / "out"
+
+
+# ---------------------------------------------------------------------------
+# wiki/triggers.py — disabled path + paper-not-found
+# ---------------------------------------------------------------------------
+
+
+def test_wiki_trigger_disabled_returns_skipped(monkeypatch):
+    from paper_rag import config as cfg_mod
+    from paper_rag.wiki import triggers
+
+    fake_cfg = type("C", (), {"wiki": type("W", (), {"enabled": False})()})()
+    monkeypatch.setattr(cfg_mod, "load", lambda: fake_cfg)
+
+    out = triggers.on_paper_indexed("any-paper")
+    assert out == {"skipped": "wiki disabled"}
+
+
+# ---------------------------------------------------------------------------
+# proactive/digest.py — _tldr cache + fallback
+# ---------------------------------------------------------------------------
+
+
+def test_digest_tldr_cached_and_fallback(monkeypatch):
+    from paper_rag.proactive import digest
+
+    digest._TLDR_CACHE.clear()
+
+    # Make chat throw -> fallback to abstract truncation
+    import sys
+    import types
+    monkeypatch.setitem(
+        sys.modules,
+        "paper_rag.rag.llm",
+        types.SimpleNamespace(chat=lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("no llm"))),
+    )
+
+    p = {"arxiv_id": "1234.5678", "title": "T", "abstract": "abc " * 30}
+    s1 = digest._tldr(p)
+    s2 = digest._tldr(p)  # cache hit, should be identical
+    assert s1 == s2
+    assert s1.strip() != ""
+    assert "1234.5678" in digest._TLDR_CACHE
+
+
+# ---------------------------------------------------------------------------
+# proactive/auto_ingest_hook.py — arxiv id regex extraction
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("Check https://arxiv.org/abs/2310.11511 for Self-RAG", ["2310.11511"]),
+        ("see arxiv.org/pdf/2401.02954v2", ["2401.02954"]),
+        ("Cited as arxiv:2305.06983 in the survey", ["2305.06983"]),
+        # multiple ids deduped, first-seen order kept
+        (
+            "arxiv:2310.11511 and arxiv:2310.11511 plus https://arxiv.org/abs/2401.02954",
+            ["2401.02954", "2310.11511"],
+        ),
+        ("nothing here", []),
+        ("", []),
+    ],
+)
+def test_auto_ingest_detect_arxiv_ids(text, expected):
+    from paper_rag.proactive.auto_ingest_hook import detect_arxiv_ids
+
+    assert detect_arxiv_ids(text) == expected
+
+
+# ---------------------------------------------------------------------------
+# rag/async_api.py — anyio thread offload
+# ---------------------------------------------------------------------------
+
+
+def test_async_answer_offloads_to_thread(monkeypatch):
+    """Ensure answer_async returns the same dict the sync answer() would
+    return, and runs the sync code on a worker thread."""
+    import asyncio
+    import threading
+
+    from paper_rag.rag import async_api
+
+    main_thread = threading.get_ident()
+    seen_threads = []
+
+    def fake_answer(q, *, paper_ids=None, conversation_id=None):
+        seen_threads.append(threading.get_ident())
+        return {"answer": f"got:{q}", "citations": [], "chunks": []}
+
+    import sys
+    import types
+    monkeypatch.setitem(
+        sys.modules, "paper_rag.rag.qa_agentic",
+        types.SimpleNamespace(answer=fake_answer),
+    )
+
+    _loop = asyncio.new_event_loop()
+    try:
+        out = _loop.run_until_complete(async_api.answer_async("hello", paper_ids=["a"]))
+    finally:
+        _loop.close()
+    assert out["answer"] == "got:hello"
+    # The body of fake_answer must have run on a worker thread.
+    assert seen_threads and seen_threads[0] != main_thread
+
+
+def test_async_stream_drains_sync_generator(monkeypatch):
+    """stream_answer_async should yield every event the sync generator
+    produces, in order."""
+    import asyncio
+
+    from paper_rag.rag import async_api
+
+    def fake_stream(q, *, paper_ids=None):
+        yield {"event": "intent", "data": {}}
+        yield {"event": "answer_chunk", "data": {"text": "hi"}}
+        yield {"event": "done", "data": {}}
+
+    import sys
+    import types
+    monkeypatch.setitem(
+        sys.modules, "paper_rag.rag.qa_stream",
+        types.SimpleNamespace(stream_answer=fake_stream),
+    )
+
+    async def _drive():
+        events = []
+        async for ev in async_api.stream_answer_async("q"):
+            events.append(ev["event"])
+        return events
+
+    _loop2 = asyncio.new_event_loop()
+    try:
+        events = _loop2.run_until_complete(_drive())
+    finally:
+        _loop2.close()
+    assert events == ["intent", "answer_chunk", "done"]

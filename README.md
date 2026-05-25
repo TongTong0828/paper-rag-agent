@@ -144,7 +144,9 @@ sequenceDiagram
 
 See [`docs/diagrams/abstain_flow.md`](docs/diagrams/abstain_flow.md) for the
 full mermaid sequence diagram and [`docs/SYSTEM_DESIGN.md`](docs/SYSTEM_DESIGN.md)
-for a longer walkthrough.
+for a longer walkthrough. [`docs/DEMO.md`](docs/DEMO.md) has 4 mermaid
+diagrams for the abstain decision, proactive scheduler, feedback loop,
+and middleware stack. Runnable walk-throughs live in [`examples/`](examples/).
 
 ---
 
