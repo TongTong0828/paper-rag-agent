@@ -20,58 +20,36 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Show env
+      - name: Install (CI minimal set)
         run: |
-          python --version
-          python -m pip --version
-          uname -a
-          pwd
-          ls -la
-
-      - name: Install (minimal)
-        continue-on-error: true
-        id: install
-        run: |
-          set -x
           python -m pip install --upgrade pip
-          pip install "ruff==0.15.14" pydantic pyyaml httpx pydantic-settings
+          # Pinned ruff for reproducible lint output.
+          # Runtime deps grouped by what each test layer actually imports:
+          #   pydantic / pydantic-settings — config, schemas
+          #   pyyaml / httpx                — config loader, http client
+          #   sqlmodel                      — store / wiki / tools.wiki_lookup
+          #   qdrant-client                 — store.qdrant_store + chaos test
+          #   python-pptx / python-docx     — deliver.{pptx,docx}
+          # Heavy deps (FlagEmbedding, sentence-transformers, magic-pdf,
+          # torch, etc.) are NOT required for these tests.
+          pip install \
+            "ruff==0.15.14" \
+            pydantic pydantic-settings pyyaml httpx \
+            sqlmodel qdrant-client \
+            python-pptx python-docx
 
-      - name: Ruff check (core rules only)
-        continue-on-error: true
-        id: ruff
-        run: |
-          set -x
-          ruff --version
-          ruff check --select E,F,W,I --ignore E501 src tests
+      - name: Ruff check (core rules)
+        # Standalone repo CI focuses on real bugs (E/F/W) + import order (I).
+        # Style nits (B/UP/SIM/RUF) are checked locally via pre-commit.
+        # E501 (line length) is intentionally ignored.
+        run: ruff check --select E,F,W,I --ignore E501 src tests
 
       - name: Pure-logic tests
-        continue-on-error: true
-        id: tests
         env:
           PYTHONPATH: src:tests
-        run: |
-          set -x
-          python scripts/_run_tests.py
+        run: python scripts/_run_tests.py
 
       - name: Smoke import check
-        continue-on-error: true
-        id: smoke
         env:
           PYTHONPATH: src
-        run: |
-          set -x
-          python scripts/_run_smoke.py
-
-      - name: Final summary
-        run: |
-          echo "install: ${{ steps.install.outcome }}"
-          echo "ruff:    ${{ steps.ruff.outcome }}"
-          echo "tests:   ${{ steps.tests.outcome }}"
-          echo "smoke:   ${{ steps.smoke.outcome }}"
-          # Hard-fail only if install or smoke failed; allow ruff/tests soft-fail
-          if [ "${{ steps.install.outcome }}" != "success" ]; then exit 1; fi
-          if [ "${{ steps.smoke.outcome }}" != "success" ] \
-             && [ "${{ steps.tests.outcome }}" != "success" ]; then
-            echo "Both tests and smoke failed."
-            exit 1
-          fi
+        run: python scripts/_run_smoke.py
