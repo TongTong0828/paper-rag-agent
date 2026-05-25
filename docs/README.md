@@ -1,6 +1,6 @@
 # docs/
 
-> 文档地图。规划入口看 [`../PLAN.md`](../PLAN.md)。
+> 文档地图。所有里程碑历史在 [`STATUS.md`](./STATUS.md)，路线图见 [GitHub Issues](https://github.com/TongTong0828/paper-rag-agent/issues)。
 
 | 文档 | 适合谁 |
 |---|---|

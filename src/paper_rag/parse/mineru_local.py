@@ -144,5 +144,6 @@ def _normalize_into(out_dir: Path, src_md: Path, mineru_assets: Path | None) -> 
                 encoding="utf-8",
             )
             break
-        except Exception:
+        except Exception as e:  # noqa: BLE001 — try next candidate
+            log.debug("mineru layout candidate %s failed: %s", cand.name, e)
             continue

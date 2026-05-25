@@ -19,6 +19,9 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
 ]
 
+# Base deps: just enough to import paper_rag.* and run pure-logic tests.
+# Heavy ML / IO deps are lazy-imported inside the modules that need them
+# and are grouped under `[project.optional-dependencies]` below.
 dependencies = [
     "pydantic>=2.6",
     "pydantic-settings>=2.2",
@@ -28,32 +31,44 @@ dependencies = [
     "httpx>=0.27",
     "tiktoken>=0.7",
     "tqdm>=4.66",
-    "arxiv>=2.1",
-    "pymupdf>=1.24",
     "qdrant-client>=1.9",
     "sqlmodel>=0.0.16",
     "rank-bm25>=0.2.2",
-    "FlagEmbedding>=1.2.10",
     "openai>=1.40",                  # OpenAI-compatible client (DashScope/Qwen, OpenAI direct)
     "python-dotenv>=1.0",            # .env loading
 ]
 
 [project.optional-dependencies]
+# Heavy ML deps for embedding + reranking. ~3GB of model weights at runtime.
+embed = [
+    "FlagEmbedding>=1.2.10",
+]
+# arXiv / OpenAlex / Semantic Scholar ingest sources.
+ingest = [
+    "arxiv>=2.1",
+    "pymupdf>=1.24",
+]
+# Mineru-based PDF parser (optional, falls back to pymupdf if absent).
 mineru = ["magic-pdf>=0.7.0b1"]
-deerflow = [                         # M8 DeerFlow gateway adapter (LangChain @tool)
+# DeerFlow gateway adapter (LangChain @tool wrappers).
+deerflow = [
     "langchain>=0.3",
     "langchain-core>=0.3",
 ]
-deliver = [                          # M10 deliverable generators (PPT/Word)
+# M10 deliverable generators (PowerPoint / Word).
+deliver = [
     "python-pptx>=0.6.23",
     "python-docx>=1.1.2",
 ]
-deliver-pdf = [                      # P3-15 optional PDF rendering (reportlab)
+# Optional PDF rendering (reportlab) for deliver.pdf path.
+deliver-pdf = [
     "reportlab>=4.0",
 ]
-proactive = [                        # M9 standalone cron runner (Docker sidecar)
+# M9 standalone cron runner (Docker sidecar).
+proactive = [
     "apscheduler>=3.10",
 ]
+# Development + CI tooling.
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
@@ -62,13 +77,17 @@ dev = [
     "fastapi>=0.115",
     "sse-starlette>=2.1",
 ]
+# Convenience meta-extra: install everything needed to actually run a server.
+full = [
+    "paper-rag[embed,ingest,deliver,deliver-pdf,proactive,deerflow]",
+]
 
 [project.urls]
-Homepage = "https://github.com/bytedance/deer-flow/tree/main/paper_rag"
-Repository = "https://github.com/bytedance/deer-flow"
-Documentation = "https://github.com/bytedance/deer-flow/tree/main/paper_rag/docs"
-Changelog = "https://github.com/bytedance/deer-flow/blob/main/paper_rag/CHANGELOG.md"
-"Bug Tracker" = "https://github.com/bytedance/deer-flow/issues"
+Homepage = "https://github.com/TongTong0828/paper-rag-agent"
+Repository = "https://github.com/TongTong0828/paper-rag-agent"
+Documentation = "https://github.com/TongTong0828/paper-rag-agent/tree/main/docs"
+Changelog = "https://github.com/TongTong0828/paper-rag-agent/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/TongTong0828/paper-rag-agent/issues"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

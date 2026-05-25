@@ -44,11 +44,10 @@ import sqlite3
 import time
 import urllib.parse
 import urllib.request
-from collections.abc import Iterator
 from contextlib import contextmanager
 from email.mime.text import MIMEText
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 log = logging.getLogger(__name__)
 
@@ -134,7 +133,7 @@ def _post_json(url: str, payload: dict) -> tuple[int, str]:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
+    with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:  # noqa: S310
         return resp.status, resp.read(2000).decode("utf-8", errors="replace")
 
 
@@ -157,7 +156,7 @@ def _send_dingtalk(endpoint: str, secret: str | None, item: dict) -> tuple[bool,
     try:
         status, body = _post_json(url, payload)
         return status == 200, f"{status}:{body[:120]}"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return False, f"{type(e).__name__}:{e}"
 
 
@@ -181,7 +180,7 @@ def _send_feishu(endpoint: str, secret: str | None, item: dict) -> tuple[bool, s
     try:
         status, body = _post_json(endpoint, payload)
         return status == 200, f"{status}:{body[:120]}"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return False, f"{type(e).__name__}:{e}"
 
 
@@ -194,7 +193,7 @@ def _send_wecom(endpoint: str, _secret: str | None, item: dict) -> tuple[bool, s
     try:
         status, body = _post_json(endpoint, payload)
         return status == 200, f"{status}:{body[:120]}"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return False, f"{type(e).__name__}:{e}"
 
 
@@ -219,7 +218,7 @@ def _send_email(endpoint: str, _secret: str | None, item: dict) -> tuple[bool, s
                 s.login(q["user"], q["password"])
             s.send_message(msg)
         return True, f"sent->{receiver}"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return False, f"{type(e).__name__}:{e}"
 
 
@@ -247,7 +246,7 @@ def fan_out(item: dict) -> dict[str, Any]:
         return {"sent": 0, "skipped": "no user_id"}
     try:
         hooks = list_webhooks(user_id)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         log.warning("webhook list_webhooks failed: %s", e)
         return {"sent": 0, "error": str(e)}
 
@@ -260,12 +259,20 @@ def fan_out(item: dict) -> dict[str, Any]:
         sender = _DISPATCH.get(h["channel"])
         if not sender:
             results.append({"channel": h["channel"], "ok": False, "detail": "unknown channel"})
+            log.warning("webhook unknown channel=%s for user=%s", h["channel"], user_id)
             continue
         ok, detail = sender(h["endpoint"], h.get("secret"), item)
         results.append({"channel": h["channel"], "ok": ok, "detail": detail})
         if ok:
             sent += 1
+        else:
+            # Surface failures in logs so misconfigured/dead endpoints are
+            # visible without having to inspect every fan_out return value.
+            log.warning(
+                "webhook send failed channel=%s user=%s detail=%s",
+                h["channel"], user_id, detail,
+            )
     return {"sent": sent, "results": results}
 
 
-__all__ = ["add_webhook", "disable_webhook", "fan_out", "list_webhooks"]
+__all__ = ["add_webhook", "list_webhooks", "disable_webhook", "fan_out"]

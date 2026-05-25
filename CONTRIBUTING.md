@@ -45,7 +45,7 @@ pre-commit install   # 可选，需要先 `pip install pre-commit`
 | 新决策 | `docs/adrs/NNNN-<slug>.md`（提交一份就 freeze 文本，更新写 ### Update） |
 | 改架构图 / 数据流 | `docs/ARCHITECTURE.md` |
 | 改部署或调试 | `docs/OPERATIONS.md` |
-| 加迭代项 | `PLAN.md` 3.x |
+| 加迭代项 | 开一个 [GitHub Issue](https://github.com/TongTong0828/paper-rag-agent/issues) |
 | 标已完成 | `docs/STATUS.md` |
 
 ## 加新工具（暴露给 LLM Agent）

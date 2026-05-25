@@ -20,10 +20,9 @@ import json
 import logging
 import sqlite3
 import time
-from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 log = logging.getLogger(__name__)
 
@@ -104,8 +103,10 @@ def write(
             "title": title,
             "body_md": body_md,
         })
-    except Exception:
-        pass
+    except Exception:  # noqa: BLE001 — outbound network must not affect QA
+        # Don't crash the inbox write, but make the failure visible — silent
+        # webhook failures hide misconfigured endpoints in production.
+        log.exception("webhook fan_out failed for item_id=%s user_id=%s", item_id, user_id)
 
     return item_id
 
@@ -188,10 +189,10 @@ def purge_older_than(epoch: float) -> int:
 
 __all__ = [
     "INBOX_KINDS",
-    "dismiss",
+    "write",
     "list_for_user",
     "mark_read",
-    "purge_older_than",
+    "dismiss",
     "unread_count",
-    "write",
+    "purge_older_than",
 ]

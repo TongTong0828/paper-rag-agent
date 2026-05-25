@@ -1,6 +1,6 @@
 # STATUS — 已完成项详单
 
-> 严格记录每个里程碑的产出，不掺路线/愿景内容。新工作进 PLAN.md。
+> 严格记录每个里程碑的产出，不掺路线/愿景内容。新工作请开 GitHub Issue。
 
 ## M0 · 骨架 ✅
 
@@ -304,7 +304,6 @@ ADR-0018 完整骨架落地：从"被动答"升级到"主动给"。
 ## 文档
 
 - `README.md` 项目门面
-- `PLAN.md` 唯一规划文件
 - `docs/ARCHITECTURE.md` 架构与数据流
 - `docs/STATUS.md`（本文件）
 - `docs/OPERATIONS.md` 运维手册

@@ -15,8 +15,7 @@ Tests stub bge-m3 encoding to keep them fast.
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
-from typing import Any
+from typing import Any, Iterable
 
 from . import inbox, subscriptions
 
@@ -135,8 +134,8 @@ def notify_matches(
         try:
             from paper_rag.observability.metrics import counter
             counter("paper_rag_proactive_sub_match_total").inc()
-        except Exception:
-            pass
+        except Exception as e:  # noqa: BLE001 — metric must never block matching
+            log.debug("sub_match metric increment failed: %s", e)
         written += 1
     return written
 
