@@ -9,6 +9,7 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
@@ -18,18 +19,23 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: pip
+
+      - name: Show env
+        run: |
+          python --version
+          python -m pip --version
 
       - name: Install (minimal)
         run: |
           python -m pip install --upgrade pip
           # Install only deps needed for pure-logic tests; heavy deps
           # (FlagEmbedding, sqlmodel, magic-pdf) are NOT required for CI.
-          pip install pydantic pyyaml httpx pydantic-settings ruff
+          # Pin ruff so behavior matches what's verified locally.
+          pip install "ruff==0.15.14" pydantic pyyaml httpx pydantic-settings
 
       - name: Ruff check (core rules only)
         # Standalone repo CI focuses on real bugs (E/F/W) + import order (I).
-        # Style nits (B/UP/SIM/RUF) are checked locally via pre-commit.
+        # Style nits (B/UP/SIM/RUF) are run locally via pre-commit.
         # E501 (line length) is intentionally ignored — see pyproject.toml.
         run: ruff check --select E,F,W,I --ignore E501 src tests
 
