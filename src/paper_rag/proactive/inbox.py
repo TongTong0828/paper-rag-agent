@@ -18,11 +18,10 @@ from __future__ import annotations
 
 import json
 import logging
-import sqlite3
 import time
-from contextlib import contextmanager
-from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
+
+from ._db import connect as _connect_db
 
 log = logging.getLogger(__name__)
 
@@ -47,24 +46,8 @@ CREATE INDEX IF NOT EXISTS idx_inbox_kind ON inbox_items(kind);
 """
 
 
-def _resolve_path() -> Path:
-    from ..feedback import store as feedback_store
-
-    return feedback_store._resolve_path()
-
-
-@contextmanager
-def _connect() -> Iterator[sqlite3.Connection]:
-    path = _resolve_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(str(path))
-    con.row_factory = sqlite3.Row
-    try:
-        con.executescript(_SCHEMA)
-        yield con
-        con.commit()
-    finally:
-        con.close()
+def _connect():
+    return _connect_db(_SCHEMA)
 
 
 def write(

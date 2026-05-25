@@ -15,11 +15,9 @@ Schema
 from __future__ import annotations
 
 import logging
-import sqlite3
 import time
-from collections.abc import Iterator
-from contextlib import contextmanager
-from pathlib import Path
+
+from ._db import connect as _connect_db
 
 log = logging.getLogger(__name__)
 
@@ -36,24 +34,8 @@ CREATE INDEX IF NOT EXISTS idx_pa_user_time ON paper_access(user_id, last_access
 """
 
 
-def _resolve_path() -> Path:
-    from ..feedback import store as feedback_store
-
-    return feedback_store._resolve_path()
-
-
-@contextmanager
-def _connect() -> Iterator[sqlite3.Connection]:
-    path = _resolve_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(str(path))
-    con.row_factory = sqlite3.Row
-    try:
-        con.executescript(_SCHEMA)
-        yield con
-        con.commit()
-    finally:
-        con.close()
+def _connect():
+    return _connect_db(_SCHEMA)
 
 
 def touch(user_id: str, paper_id: str, *, ts: float | None = None) -> None:
@@ -115,4 +97,4 @@ def list_users_with_access() -> list[str]:
     return [r["user_id"] for r in rows]
 
 
-__all__ = ["list_users_with_access", "stale_for_user", "touch", "touch_many"]
+__all__ = ["touch", "touch_many", "stale_for_user", "list_users_with_access"]

@@ -124,7 +124,7 @@ def create_entry(*, name: str, category: str, paper_id: str, paper_title: str,
             .replace("{paper_id}", paper_id)
             .replace("{title}", paper_title or "")
             .replace("{chunks}", _format_chunks(chunks))}],
-        temperature=0.2,
+        temperature=cfg.load().llm.temperatures.wiki,
         max_tokens=600,
     )
     try:
@@ -161,7 +161,7 @@ def patch_entry(*, existing: WikiEntry, paper_id: str, paper_title: str,
             .replace("{paper_id}", paper_id)
             .replace("{title}", paper_title or "")
             .replace("{chunks}", _format_chunks(chunks))}],
-        temperature=0.2,
+        temperature=cfg.load().llm.temperatures.wiki,
         max_tokens=600,
     )
     try:

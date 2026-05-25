@@ -15,12 +15,11 @@ Schema
 from __future__ import annotations
 
 import logging
-import sqlite3
 import time
 from collections.abc import Iterator
-from contextlib import contextmanager
-from pathlib import Path
 from typing import Any
+
+from ._db import connect as _connect_db
 
 log = logging.getLogger(__name__)
 
@@ -53,25 +52,8 @@ CREATE INDEX IF NOT EXISTS idx_sub_enabled ON subscriptions(enabled);
 """
 
 
-def _resolve_path() -> Path:
-    """Reuse the same SQLite file as feedback_events (M11)."""
-    from ..feedback import store as feedback_store
-
-    return feedback_store._resolve_path()
-
-
-@contextmanager
-def _connect() -> Iterator[sqlite3.Connection]:
-    path = _resolve_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(str(path))
-    con.row_factory = sqlite3.Row
-    try:
-        con.executescript(_SCHEMA)
-        yield con
-        con.commit()
-    finally:
-        con.close()
+def _connect():
+    return _connect_db(_SCHEMA)
 
 
 def add(user_id: str, kind: str, value: str, *, strength: str = "normal") -> int:
@@ -173,14 +155,14 @@ def iter_active() -> Iterator[dict[str, Any]]:
 
 
 __all__ = [
-    "STRENGTH_THRESHOLD",
     "SUBSCRIPTION_KINDS",
     "SUBSCRIPTION_STRENGTHS",
+    "STRENGTH_THRESHOLD",
     "add",
-    "delete",
-    "get",
-    "iter_active",
     "list_for_user",
-    "mark_matched",
+    "get",
+    "delete",
     "toggle",
+    "mark_matched",
+    "iter_active",
 ]

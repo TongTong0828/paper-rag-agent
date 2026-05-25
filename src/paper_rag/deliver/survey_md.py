@@ -21,6 +21,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
+from .. import config as cfg
 from ._common import (
     PaperBundle,
     aggregate_citations,
@@ -102,7 +103,7 @@ def _synthesize_outline(bundles: list[PaperBundle], max_words: int) -> str:
                  "content": "You are a precise academic writer. Strict citation discipline."},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.3,
+            temperature=cfg.load().llm.temperatures.survey,
             max_tokens=4096,
         )
     except Exception as e:

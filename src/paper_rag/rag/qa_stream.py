@@ -19,7 +19,7 @@ Same hard caps as qa_agentic (max_inner_iters / max_inner_tokens).
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from typing import Generator
 
 from .. import config as cfg
 from ..retrieve.format import format_evidence
@@ -166,18 +166,15 @@ def stream_answer(question: str, *, paper_ids: list[str] | None = None) -> Gener
 def _stream_chat(system: str, user: str):
     """Yield string tokens from the OpenAI-compatible streaming endpoint."""
     c = cfg.load().llm
-    if not (c.base_url and c.api_key):
-        raise RuntimeError("LLM config missing")
-    from openai import OpenAI
-
-    client = OpenAI(base_url=c.base_url, api_key=c.api_key)
     chosen = c.chat_model
     if not chosen:
         raise RuntimeError("CHAT_MODEL not set")
-    resp = client.chat.completions.create(
+    from .llm import get_client
+
+    resp = get_client().chat.completions.create(
         model=chosen,
         messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
-        temperature=0.2,
+        temperature=c.temperatures.stream,
         max_tokens=600,
         stream=True,
     )

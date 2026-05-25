@@ -385,7 +385,7 @@ def _answer_impl(
     try:
         raw = chat(
             [{"role": "system", "content": _SYSTEM}, {"role": "user", "content": user}],
-            temperature=0.2,
+            temperature=cfg.load().llm.temperatures.answer,
             max_tokens=1024,
         )
     except Exception as e:  # noqa: BLE001 — fall back to evidence-only response

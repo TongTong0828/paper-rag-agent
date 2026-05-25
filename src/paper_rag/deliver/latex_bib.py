@@ -19,6 +19,7 @@ import io
 import logging
 import zipfile
 
+from .. import config as cfg
 from ..tools.bibtex_export import BibtexExportInput, _cite_key, export_bibtex
 from ._common import (
     PaperBundle,
@@ -85,7 +86,7 @@ def _synthesize_with_llm(bundles_with_keys: list[tuple[PaperBundle, str]]) -> st
                  "content": "You write LaTeX academic prose. Strict citation discipline."},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.3,
+            temperature=cfg.load().llm.temperatures.latex_bib,
             max_tokens=1500,
         )
     except Exception as e:

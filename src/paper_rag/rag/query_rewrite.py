@@ -32,11 +32,12 @@ Return only JSON.
 
 
 def rewrite(question: str) -> dict:
-    enable = cfg.load().rag.enable_hyde
+    c = cfg.load()
+    enable = c.rag.enable_hyde
     try:
         raw = chat(
             [{"role": "user", "content": _PROMPT.replace("{q}", question)}],
-            temperature=0.3,
+            temperature=c.llm.temperatures.rewrite,
             max_tokens=400,
         )
         m = re.search(r"\{.*\}", raw, re.DOTALL)

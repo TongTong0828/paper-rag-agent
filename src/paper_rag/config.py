@@ -108,12 +108,28 @@ class _Rag(BaseModel):
     abstain: _Abstain = Field(default_factory=_Abstain)
 
 
+class _LlmTemperatures(BaseModel):
+    """Per-role LLM temperatures.
+
+    Picked once based on offline calibration; centralised here so that a
+    single config tweak rolls out to every call site (qa_agentic, qa_stream,
+    deliver/survey, deliver/latex_bib, wiki/flow, query_rewrite).
+    """
+    answer: float = 0.2          # qa_agentic main answer
+    stream: float = 0.2          # qa_stream main answer
+    rewrite: float = 0.3         # query_rewrite — wider for paraphrase diversity
+    wiki: float = 0.2            # wiki concept create / patch
+    survey: float = 0.3          # deliver/survey_md narrative
+    latex_bib: float = 0.3       # deliver/latex_bib narrative
+
+
 class _Llm(BaseModel):
     provider: str = "openai_compatible"
     base_url: str | None = None
     api_key: str | None = None
     chat_model: str | None = None
     small_model: str | None = None
+    temperatures: _LlmTemperatures = Field(default_factory=_LlmTemperatures)
 
 
 class _Wiki(BaseModel):
@@ -181,11 +197,11 @@ def load(path: str | Path | None = None) -> AppConfig:
         cfg_path = env_path if env_path.is_absolute() else (PROJECT_ROOT / env_path)
     else:
         cfg_path = DEFAULT_CONFIG_PATH
-    with open(cfg_path, encoding="utf-8") as f:
+    with open(cfg_path, "r", encoding="utf-8") as f:
         raw = yaml.safe_load(f)
     raw = _expand_env(raw)
     raw = _resolve_paths(raw)
     return AppConfig.model_validate(raw)
 
 
-__all__ = ["PROJECT_ROOT", "AppConfig", "load"]
+__all__ = ["AppConfig", "load", "PROJECT_ROOT"]
