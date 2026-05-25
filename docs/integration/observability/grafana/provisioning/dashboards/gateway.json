@@ -1,0 +1,251 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "title": "DeerFlow Gateway · paper_rag",
+  "uid": "deerflow-gateway-paper-rag",
+  "tags": ["deerflow", "paper_rag", "gateway", "rag"],
+  "timezone": "Asia/Shanghai",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {"from": "now-1h", "to": "now"},
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {"text": "Prometheus", "value": "Prometheus"}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "QPS by route",
+      "type": "timeseries",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "fieldConfig": {"defaults": {"unit": "reqps"}},
+      "targets": [
+        {
+          "expr": "sum by (path) (rate(gateway_http_requests_total[1m]))",
+          "legendFormat": "{{path}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Status code mix",
+      "type": "timeseries",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "fieldConfig": {"defaults": {"unit": "reqps"}},
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(gateway_http_requests_total[1m]))",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Latency P50 / P95 / P99 (overall)",
+      "type": "timeseries",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "fieldConfig": {"defaults": {"unit": "s"}},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(gateway_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(gateway_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(gateway_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "5xx error rate",
+      "type": "timeseries",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "fieldConfig": {"defaults": {"unit": "percentunit"}},
+      "targets": [
+        {
+          "expr": "sum(rate(gateway_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(gateway_http_requests_total[5m]))",
+          "legendFormat": "5xx ratio",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Latency P95 by route (top)",
+      "type": "timeseries",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+      "fieldConfig": {"defaults": {"unit": "s"}},
+      "targets": [
+        {
+          "expr": "topk(10, histogram_quantile(0.95, sum by (le, path) (rate(gateway_http_request_duration_seconds_bucket[5m]))))",
+          "legendFormat": "{{path}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "abstain decision distribution",
+      "type": "timeseries",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+      "fieldConfig": {"defaults": {"unit": "reqps"}},
+      "targets": [
+        {
+          "expr": "sum by (decision) (rate(paper_rag_qa_abstain_total[5m]))",
+          "legendFormat": "{{decision}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "QA citations & suspicious",
+      "type": "timeseries",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+      "targets": [
+        {
+          "expr": "rate(paper_rag_qa_citations_total[5m])",
+          "legendFormat": "valid cites/s",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(paper_rag_qa_suspicious_total[5m])",
+          "legendFormat": "suspicious/s",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "QA degradation breakdown",
+      "type": "timeseries",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32},
+      "targets": [
+        {
+          "expr": "sum by (reason) (rate(paper_rag_qa_degraded_total[5m]))",
+          "legendFormat": "{{reason}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Proactive notifications/min",
+      "type": "timeseries",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
+      "targets": [
+        {
+          "expr": "rate(paper_rag_proactive_digest_total[5m])",
+          "legendFormat": "digest",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(paper_rag_proactive_stale_card_total[5m])",
+          "legendFormat": "stale",
+          "refId": "B"
+        },
+        {
+          "expr": "sum by (status) (rate(paper_rag_proactive_auto_ingest_total[5m]))",
+          "legendFormat": "auto_ingest {{status}}",
+          "refId": "C"
+        },
+        {
+          "expr": "rate(paper_rag_proactive_sub_match_total[5m])",
+          "legendFormat": "sub_match",
+          "refId": "D"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Rate-limit rejections (429)",
+      "type": "stat",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 40},
+      "fieldConfig": {"defaults": {"unit": "short", "color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "green", "value": null}, {"color": "orange", "value": 1}, {"color": "red", "value": 10}]}}},
+      "targets": [
+        {
+          "expr": "sum(increase(gateway_http_requests_total{status=\"429\"}[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Timeouts (504)",
+      "type": "stat",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 40},
+      "fieldConfig": {"defaults": {"unit": "short", "color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "green", "value": null}, {"color": "orange", "value": 1}]}}},
+      "targets": [
+        {
+          "expr": "sum(increase(gateway_http_requests_total{status=\"504\"}[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Body too large (413)",
+      "type": "stat",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 40},
+      "targets": [
+        {
+          "expr": "sum(increase(gateway_http_requests_total{status=\"413\"}[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Auth failures (401)",
+      "type": "stat",
+      "datasource": "${datasource}",
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 40},
+      "targets": [
+        {
+          "expr": "sum(increase(gateway_http_requests_total{status=\"401\"}[5m]))",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

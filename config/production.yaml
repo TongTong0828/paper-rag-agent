@@ -1,0 +1,94 @@
+# paper_rag — production config (M8 / ADR-0015)
+#
+# Loaded inside the docker-compose stack via:
+#   PAPER_RAG_CONFIG=/opt/paper_rag/config/production.yaml
+#
+# Differences from default.yaml:
+#   - Paths absolute under /data (mounted volume)
+#   - Qdrant via remote service `qdrant:6333` (no embedded fallback)
+#   - bge-m3 device=auto (CPU on x86 servers, MPS on Apple silicon dev hosts)
+#   - reranker disabled by default (1.2GB model + 200ms latency; opt in per deployment)
+#   - LLM creds via env vars in container env_file ../.env
+#   - abstain enabled with M7 P0 conservative defaults (datadriven)
+
+paths:
+  data_root: /data
+  papers_dir: /data/papers
+  parsed_dir: /data/parsed
+  index_dir: /data/index
+  sqlite_path: /data/index/papers.sqlite
+  bm25_path: /data/index/bm25.pkl
+  models_dir: /opt/paper_rag/models       # shared volume, persists bge-m3 cache
+
+embedding:
+  provider: bge-m3
+  model_name: BAAI/bge-m3
+  dim: 1024
+  batch_size: 32
+  max_length: 8192
+  device: auto
+
+reranker:
+  enabled: false                          # opt in: set true if 1.2GB + ~200ms is acceptable
+  model_name: BAAI/bge-reranker-v2-m3
+  cache_dir: null
+  use_fp16: true
+  top_k: 8
+
+qdrant:
+  url: $QDRANT_URL                        # http://qdrant:6333 (set in compose)
+  local_path: null                        # remote-only; no embedded fallback in production
+  collection_chunks: paper_chunks
+  collection_wiki: wiki_entries
+  distance: Cosine
+
+mineru:
+  mode: local
+  cli: mineru
+  timeout_sec: 600
+  fallback_to_pymupdf: true
+
+chunk:
+  text:
+    target_tokens: 500
+    overlap_tokens: 50
+    encoding: cl100k_base
+  context_prefix: "[Title: {title}] [Section: {section}]\n"
+
+retrieve:
+  top_k_dense: 20
+  top_k_bm25: 20
+  rrf_k: 60
+  rerank_top_k: 8
+  sparse_backend: fts5
+
+rag:
+  max_inner_iters: 3
+  max_inner_tokens: 8000
+  enable_hyde: true
+  enable_reflect: true
+  qa_cache_enabled: true                  # PROD: enable cache to reduce LLM cost
+  qa_cache_ttl_hours: 24
+  abstain:
+    enabled: true
+    threshold_low: 0.20
+    threshold_high: 0.40
+    min_chunks: 3
+    no_evidence_message: "未在已索引文献中找到与该问题相关的内容。请确认问题与已入库的论文主题相符，或考虑通过 paper_ingest_tool 扩充语料库。"
+
+llm:
+  provider: openai_compatible
+  base_url: $OPENAI_BASE_URL
+  api_key: $OPENAI_API_KEY
+  chat_model: $CHAT_MODEL
+  small_model: $SMALL_MODEL
+
+wiki:
+  enabled: true                           # PROD: wiki self-evolution enabled
+  similarity_threshold: 0.85
+  rate_limit_hours: 24
+  self_eval_threshold: 0.7
+
+logging:
+  level: INFO
+  json: true                              # PROD: structured logs for ELK/Loki

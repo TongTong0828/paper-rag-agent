@@ -1,0 +1,115 @@
+# =============================================================================
+# paper_rag — .gitignore (hardened for public release)
+# =============================================================================
+
+# ── data / runtime artifacts (user-specific, NEVER commit) ───────────────────
+data/
+!data/README.md
+logs/
+models/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.db-journal
+*.pdf
+*.pkl
+*.pt
+*.bin
+qdrant_storage/
+
+# ── secrets ──────────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# ── evaluation private artifacts (may contain proprietary QA pairs) ──────────
+tests/eval/qa_set.private.jsonl
+tests/eval/qa_set.jsonl
+tests/eval/hard_cases.jsonl
+
+# ── Python build / cache ─────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+.eggs/
+build/
+dist/
+.cache/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# ── Virtual environments ─────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# ── IDE / editor ─────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*.bak
+*~
+.project
+.pydevproject
+
+# ── OS junk ──────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Jupyter ──────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_meta
+
+# ── pre-commit ───────────────────────────────────────────────────────────────
+.pre-commit-cache/
+
+# ── Hugging Face / sentence-transformers cache ───────────────────────────────
+.huggingface/
+hf_cache/
+sentence_transformers_cache/
+
+# ── Docker volume mounts (when used as relative paths) ───────────────────────
+paper_rag_data/
+paper_rag_models/
+qdrant_data/
+prometheus_data/
+grafana_data/
+
+# ── workbuddy / agent memory (local only) ────────────────────────────────────
+.workbuddy/
+.omc/
+
+# ── OS-level personal info that may leak ─────────────────────────────────────
+*.history
+.history/
+.python_history

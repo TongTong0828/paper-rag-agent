@@ -1,0 +1,118 @@
+[project]
+name = "paper-rag"
+version = "0.1.0.dev0"
+description = "Paper deep-research RAG subsystem for DeerFlow"
+authors = [{ name = "paper_rag contributors" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["rag", "llm", "agent", "academic", "deerflow", "qdrant", "mineru"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+dependencies = [
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "loguru>=0.7",
+    "pyyaml>=6.0",
+    "tenacity>=8.2",
+    "httpx>=0.27",
+    "tiktoken>=0.7",
+    "tqdm>=4.66",
+    "arxiv>=2.1",
+    "pymupdf>=1.24",
+    "qdrant-client>=1.9",
+    "sqlmodel>=0.0.16",
+    "rank-bm25>=0.2.2",
+    "FlagEmbedding>=1.2.10",
+    "openai>=1.40",                  # OpenAI-compatible client (DashScope/Qwen, OpenAI direct)
+    "python-dotenv>=1.0",            # .env loading
+]
+
+[project.optional-dependencies]
+mineru = ["magic-pdf>=0.7.0b1"]
+deerflow = [                         # M8 DeerFlow gateway adapter (LangChain @tool)
+    "langchain>=0.3",
+    "langchain-core>=0.3",
+]
+deliver = [                          # M10 deliverable generators (PPT/Word)
+    "python-pptx>=0.6.23",
+    "python-docx>=1.1.2",
+]
+deliver-pdf = [                      # P3-15 optional PDF rendering (reportlab)
+    "reportlab>=4.0",
+]
+proactive = [                        # M9 standalone cron runner (Docker sidecar)
+    "apscheduler>=3.10",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "pre-commit>=3.7",
+    "fastapi>=0.115",
+    "sse-starlette>=2.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/bytedance/deer-flow/tree/main/paper_rag"
+Repository = "https://github.com/bytedance/deer-flow"
+Documentation = "https://github.com/bytedance/deer-flow/tree/main/paper_rag/docs"
+Changelog = "https://github.com/bytedance/deer-flow/blob/main/paper_rag/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/bytedance/deer-flow/issues"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ---- Ruff ----
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["data", "build", "dist"]
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",   # pycodestyle / pyflakes
+    "I",             # isort
+    "B",             # bugbear
+    "UP",            # pyupgrade
+    "RUF",           # ruff-specific
+    "SIM",           # flake8-simplify
+]
+ignore = [
+    "E501",   # line length handled by formatter
+    "B008",   # default arg call (pydantic Field)
+    "RUF012", # mutable class attrs
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B011", "F401"]
+"scripts/**" = ["F401"]
+"src/paper_rag/utils/logger.py" = ["F401"]   # optional loguru import
+
+[tool.ruff.lint.isort]
+known-first-party = ["paper_rag"]
+
+# ---- Pytest ----
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = ["-ra", "--strict-markers", "--tb=short"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]

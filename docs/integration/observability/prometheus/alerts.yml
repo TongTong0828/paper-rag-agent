@@ -1,0 +1,174 @@
+groups:
+  - name: deerflow_gateway
+    interval: 30s
+    rules:
+      # ── HTTP layer ─────────────────────────────────────────────────────
+      - alert: HighErrorRate5xx
+        expr: |
+          (
+            sum(rate(gateway_http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(gateway_http_requests_total[5m]))
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          component: gateway
+        annotations:
+          summary: "Gateway 5xx error rate > 1%"
+          description: "5xx ratio = {{ $value | humanizePercentage }} for 5m. Inspect gateway / paper_rag logs filtered by request_id."
+
+      - alert: CriticalErrorRate5xx
+        expr: |
+          (
+            sum(rate(gateway_http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(gateway_http_requests_total[5m]))
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          component: gateway
+        annotations:
+          summary: "Gateway 5xx error rate > 5% (paging)"
+          description: "5xx ratio = {{ $value | humanizePercentage }}. Likely Qdrant/LLM outage."
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(gateway_http_request_duration_seconds_bucket[5m]))
+          ) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: gateway
+        annotations:
+          summary: "Gateway P95 latency > 5s"
+          description: "P95 = {{ $value }}s. Check upstream LLM/Qdrant latency or rerank queue depth."
+
+      - alert: TimeoutSpike504
+        expr: sum(increase(gateway_http_requests_total{status="504"}[5m])) > 5
+        for: 1m
+        labels:
+          severity: warning
+          component: gateway
+        annotations:
+          summary: ">5 timeouts in 5min"
+          description: "{{ $value }} 504 in last 5min. Check downstream blocking or raise DEERFLOW_REQUEST_TIMEOUT_S."
+
+      # ── Auth / abuse ───────────────────────────────────────────────────
+      - alert: AuthFailureSpike401
+        expr: sum(rate(gateway_http_requests_total{status="401"}[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+          component: auth
+        annotations:
+          summary: "Sustained 401 rate > 1/s"
+          description: "Possible BetterAuth outage or credential brute force."
+
+      - alert: RateLimitSpike429
+        expr: sum(rate(gateway_http_requests_total{status="429"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: info
+          component: gateway
+        annotations:
+          summary: "Rate limit hit > 5/s sustained"
+          description: "{{ $value }}/s 429 in last 5min. Confirm legit traffic or tighten DEERFLOW_RATE_LIMIT_RPS."
+
+      # ── paper_rag domain ──────────────────────────────────────────────
+      - alert: AbstainNoEvidenceHigh
+        expr: |
+          (
+            sum(rate(paper_rag_qa_total{stop="answered"}[15m])) > 0
+          )
+          and
+          (
+            sum(rate(paper_rag_qa_total{stop="abstain_no_evidence"}[15m]))
+            /
+            (
+              sum(rate(paper_rag_qa_total[15m])) > 0
+            )
+          ) > 0.30
+        for: 15m
+        labels:
+          severity: warning
+          component: paper_rag
+        annotations:
+          summary: "abstain no_evidence rate > 30%"
+          description: "Retrieval quality has degraded. Check Qdrant connectivity, ingest backlog, or recalibrate thresholds."
+
+      - alert: SuspiciousCitationSpike
+        expr: |
+          rate(paper_rag_qa_suspicious_total[10m]) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: paper_rag
+        annotations:
+          summary: "LLM hallucinated citations > 0.5/s"
+          description: "Numeric or author-year citation patterns detected. Check qa_agentic prompt + abstain thresholds."
+
+      - alert: QADegradationSpike
+        expr: sum by (reason) (rate(paper_rag_qa_degraded_total[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          component: paper_rag
+        annotations:
+          summary: "QA degradation > 0.2/s ({{ $labels.reason }})"
+          description: "Check downstream service (LLM, Qdrant, rerank)."
+
+      # ── Proactive ─────────────────────────────────────────────────────
+      - alert: AutoIngestFailureSpike
+        expr: |
+          sum(rate(paper_rag_proactive_auto_ingest_total{status="error"}[10m]))
+          /
+          (sum(rate(paper_rag_proactive_auto_ingest_total[10m])) > 0)
+          > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: paper_rag_proactive
+        annotations:
+          summary: "Auto-ingest failure rate > 50%"
+          description: "Most arxiv URL detections are failing to ingest. Check arxiv API rate limits or PDF parser."
+
+      - alert: ProactiveCronStalled
+        expr: |
+          (time() - max(paper_rag_proactive_digest_total) by () == 0)
+          and
+          (hour() == 8 and minute() > 30)
+        for: 1h
+        labels:
+          severity: warning
+          component: paper_rag_proactive
+        annotations:
+          summary: "Daily digest did not fire"
+          description: "Check paper_rag_proactive container health and APScheduler logs."
+
+  # ── Infrastructure ──────────────────────────────────────────────────
+  - name: infra
+    interval: 60s
+    rules:
+      - alert: GatewayDown
+        expr: up{job="deerflow-gateway"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: gateway
+        annotations:
+          summary: "DeerFlow gateway scrape target down"
+          description: "Prometheus cannot scrape gateway:8001/metrics."
+
+      - alert: QdrantDown
+        expr: up{job="qdrant"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: qdrant
+        annotations:
+          summary: "Qdrant down"
+          description: "paper_rag retrieve will degrade to BM25-only."

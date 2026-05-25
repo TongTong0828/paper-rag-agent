@@ -1,0 +1,43 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: default
+  group_by: [alertname, severity, component]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  routes:
+    # Critical → page (e.g. PagerDuty)
+    - matchers:
+        - severity = critical
+      receiver: critical
+      continue: true
+    # Warning → IM channel
+    - matchers:
+        - severity = warning
+      receiver: warning
+
+receivers:
+  # Default sink — catches everything not matched above
+  - name: default
+    webhook_configs:
+      - url: http://gateway:8001/api/paper_rag/_internal/alert
+        send_resolved: true
+
+  # Critical: replace with PagerDuty / OpsGenie integration
+  - name: critical
+    webhook_configs:
+      - url: http://gateway:8001/api/paper_rag/_internal/alert
+        send_resolved: true
+
+  # Warning: route to DingTalk / Feishu / Email via existing webhook fan-out
+  - name: warning
+    webhook_configs:
+      - url: http://gateway:8001/api/paper_rag/_internal/alert
+        send_resolved: true
+
+inhibit_rules:
+  - source_matchers: [severity=critical]
+    target_matchers: [severity=warning]
+    equal: [alertname, component]

@@ -1,0 +1,42 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: dev
+
+# Load alert rules. Reload via curl -X POST http://localhost:9090/-/reload
+rule_files:
+  - "alerts.yml"
+
+# alertmanager wiring (optional). Uncomment after deploying alertmanager.
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ["alertmanager:9093"]
+
+scrape_configs:
+  # DeerFlow gateway (paper_rag + gateway middleware metrics)
+  - job_name: deerflow-gateway
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets: ["gateway:8001"]
+        labels:
+          service: gateway
+          component: paper_rag
+
+  # Qdrant exposes metrics on /metrics by default in v1.10+
+  - job_name: qdrant
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets: ["qdrant:6333"]
+        labels:
+          service: qdrant
+
+  # Optional: Prometheus self-monitoring
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          service: prometheus

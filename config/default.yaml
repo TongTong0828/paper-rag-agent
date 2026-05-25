@@ -1,0 +1,84 @@
+paths:
+  data_root: ./data
+  papers_dir: ./data/papers
+  parsed_dir: ./data/parsed
+  index_dir: ./data/index
+  sqlite_path: ./data/index/papers.sqlite
+  bm25_path: ./data/index/bm25.pkl
+  models_dir: ./data/index/models
+
+embedding:
+  provider: bge-m3
+  model_name: BAAI/bge-m3
+  dim: 1024
+  batch_size: 32
+  max_length: 8192
+  device: auto
+
+reranker:
+  enabled: true
+  model_name: BAAI/bge-reranker-v2-m3
+  cache_dir: null               # null = use paths.models_dir; else absolute path
+  use_fp16: true
+  top_k: 8
+
+qdrant:
+  url: http://localhost:6333
+  collection_chunks: paper_chunks
+  collection_wiki: wiki_entries
+  distance: Cosine
+
+mineru:
+  mode: local
+  cli: mineru
+  timeout_sec: 600
+  fallback_to_pymupdf: true
+
+chunk:
+  text:
+    target_tokens: 500
+    overlap_tokens: 50
+    encoding: cl100k_base
+  context_prefix: "[Title: {title}] [Section: {section}]\n"
+
+retrieve:
+  top_k_dense: 20
+  top_k_bm25: 20
+  rrf_k: 60
+  rerank_top_k: 8
+  sparse_backend: fts5          # fts5 | rank_bm25
+
+rag:
+  max_inner_iters: 3
+  max_inner_tokens: 8000
+  enable_hyde: true
+  enable_reflect: true
+  qa_cache_enabled: false       # set true to cache (question, paper_ids) -> answer for 24h
+  qa_cache_ttl_hours: 24
+  abstain:                      # ADR-0014 — three-way abstain on weak retrieval evidence
+    enabled: true
+    # Thresholds calibrated 2026-05-21 via scripts/calibrate_abstain.py (offline mode)
+    # against tests/eval/qa_set.real.jsonl (33 q / 3 neg). neg_blocked=100% pos_kept=97%.
+    # See data/index/abstain_calibration.json for full audit trail. Re-run online mode
+    # once Qdrant index is freshly populated for production-grade calibration.
+    threshold_low: 0.21         # < low: no_evidence (LLM call SKIPPED, returns canned message)
+    threshold_high: 0.48        # < high but >= low: weak_evidence (LLM called with insufficiency hint)
+    min_chunks: 3               # number of top chunks averaged for the evidence score
+    no_evidence_message: "未在已索引文献中找到与该问题相关的内容。请确认问题与已入库的论文主题相符，或考虑通过 paper_ingest_tool 扩充语料库。"
+
+llm:
+  provider: openai_compatible
+  base_url: $OPENAI_BASE_URL
+  api_key: $OPENAI_API_KEY
+  chat_model: $CHAT_MODEL
+  small_model: $SMALL_MODEL
+
+wiki:
+  enabled: false
+  similarity_threshold: 0.85
+  rate_limit_hours: 24
+  self_eval_threshold: 0.7
+
+logging:
+  level: INFO
+  json: false

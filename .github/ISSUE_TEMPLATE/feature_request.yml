@@ -1,0 +1,34 @@
+name: Feature request
+description: 提一个新需求 / 改进
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: motivation
+    attributes:
+      label: 动机
+      description: 为什么需要这个？解决什么问题？
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 方案概述
+      description: 期望的实现方式（接口、流程、配置项等）
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 已考虑的替代方案
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: 影响范围
+      description: 是否影响 paper_id / chunk schema / embedding？是否需要写迁移说明？
+    validations:
+      required: false

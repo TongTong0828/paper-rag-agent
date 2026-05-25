@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 看 PLAN.md 找当前迭代任务
+    url: ../../PLAN.md
+    about: M5 生产化的 P0/P1/P2 列表
+  - name: 看 CONTRIBUTING.md 了解贡献流程
+    url: ../../CONTRIBUTING.md
+    about: 分支命名 / PR 检查清单 / 文档约定

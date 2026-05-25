@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install (minimal)
+        run: |
+          python -m pip install --upgrade pip
+          # Install only deps needed for pure-logic tests; heavy deps
+          # (FlagEmbedding, sqlmodel, magic-pdf) are NOT required for CI.
+          pip install pydantic pyyaml httpx pydantic-settings ruff
+
+      - name: Ruff check
+        run: ruff check src tests
+
+      - name: Pure-logic tests
+        env:
+          PYTHONPATH: src:tests
+        run: python scripts/_run_tests.py
+
+      - name: Smoke import check
+        env:
+          PYTHONPATH: src
+        run: python scripts/_run_smoke.py || true

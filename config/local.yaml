@@ -1,0 +1,75 @@
+paths:
+  data_root: ./data
+  papers_dir: ./data/papers
+  parsed_dir: ./data/parsed
+  index_dir: ./data/index
+  sqlite_path: ./data/index/papers.sqlite
+  bm25_path: ./data/index/bm25.pkl
+  models_dir: ./data/index/models
+
+embedding:
+  provider: bge-m3
+  model_name: BAAI/bge-m3
+  dim: 1024
+  batch_size: 32
+  max_length: 8192
+  device: auto
+
+reranker:
+  enabled: false              # off for first acceptance run; turn on after baseline
+  model_name: BAAI/bge-reranker-v2-m3
+  cache_dir: null
+  use_fp16: true
+  top_k: 8
+
+qdrant:
+  url: ""
+  local_path: ./data/index/qdrant_embedded   # docker-free embedded mode
+  collection_chunks: paper_chunks
+  collection_wiki: wiki_entries
+  distance: Cosine
+
+mineru:
+  mode: local
+  cli: magic-pdf
+  timeout_sec: 600
+  fallback_to_pymupdf: true
+
+chunk:
+  text:
+    target_tokens: 500
+    overlap_tokens: 50
+    encoding: cl100k_base
+  context_prefix: "[Title: {title}] [Section: {section}]\n"
+
+retrieve:
+  top_k_dense: 20
+  top_k_bm25: 20
+  rrf_k: 60
+  rerank_top_k: 8
+  sparse_backend: fts5
+
+rag:
+  max_inner_iters: 3
+  max_inner_tokens: 8000
+  enable_hyde: true
+  enable_reflect: true
+  qa_cache_enabled: false
+  qa_cache_ttl_hours: 24
+
+llm:
+  provider: openai_compatible
+  base_url: $OPENAI_BASE_URL
+  api_key: $OPENAI_API_KEY
+  chat_model: $CHAT_MODEL
+  small_model: $SMALL_MODEL
+
+wiki:
+  enabled: false
+  similarity_threshold: 0.85
+  rate_limit_hours: 24
+  self_eval_threshold: 0.7
+
+logging:
+  level: INFO
+  json: false

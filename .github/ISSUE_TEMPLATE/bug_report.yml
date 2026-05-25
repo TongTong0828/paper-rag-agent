@@ -1,0 +1,50 @@
+name: Bug report
+description: 报一个 bug
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 问题描述
+      description: 一句话说清楚发生了什么
+      placeholder: e.g. ingest_batch 在第 7 篇时抛 database is locked
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. make qdrant-up
+        2. make ingest ID=2310.12345
+        3. 同时再开一个终端 make ingest ID=2308.00352
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: false
+
+  - type: textarea
+    id: env
+    attributes:
+      label: 环境
+      placeholder: |
+        - python:
+        - paper_rag commit / version:
+        - Qdrant version:
+        - OS:
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 堆栈
+      render: shell
+    validations:
+      required: false

@@ -1,0 +1,73 @@
+# Dockerfile build context exclusions for paper_rag
+# Anything matched here is NOT sent to the docker daemon — keeps build context
+# small (dropping from ~3GB models/data to ~5MB source) and prevents accidental
+# leakage of secrets / local state into the image.
+
+# ── version control & CI ─────────────────────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+.github
+.pre-commit-config.yaml
+
+# ── build / cache artifacts ──────────────────────────────────────────────────
+__pycache__
+*.py[cod]
+*.egg-info
+*.egg
+.eggs
+build
+dist
+.cache
+.mypy_cache
+.ruff_cache
+.pytest_cache
+.coverage
+htmlcov
+*.so
+
+# ── editor & OS junk ─────────────────────────────────────────────────────────
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*~
+
+# ── env & secrets ────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── runtime data (mounted as volume; never bake into image) ──────────────────
+data/
+logs/
+models/
+*.sqlite
+*.sqlite-journal
+*.db
+*.db-journal
+qdrant_storage/
+
+# ── tests / docs / planning (CLI image doesn't need them) ────────────────────
+tests/
+docs/
+PLAN.md
+CHANGELOG.md
+CONTRIBUTING.md
+*.md.bak
+
+# ── Docker meta itself (kept for clarity, not strictly excluded) ─────────────
+# Dockerfile is read via `docker build -f`, not from build context.
+# docker-entrypoint.sh is COPY'd explicitly — keep it in context.
+
+# ── nodes / virtualenvs ──────────────────────────────────────────────────────
+node_modules
+.venv
+venv
+env
+ENV
