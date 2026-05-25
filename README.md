@@ -1,6 +1,7 @@
 # paper_rag
 
 [![ci](https://github.com/TongTong0828/paper-rag-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/TongTong0828/paper-rag-agent/actions)
+[![codecov](https://codecov.io/gh/TongTong0828/paper-rag-agent/branch/main/graph/badge.svg)](https://codecov.io/gh/TongTong0828/paper-rag-agent)
 [![python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)]()
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -229,10 +230,22 @@ paper_rag/
 ## Development
 
 ```bash
-# Lint
+# Install dev tooling
+pip install -e .[dev]
+pre-commit install                  # local lint matches CI
+
+# Lint (same rules CI runs)
 ruff check --select E,F,W,I --ignore E501 src tests
 
-# Tests (the CI runs the same two scripts)
+# Tests (real pytest, with coverage)
+pytest -q \
+    --ignore=tests/eval \
+    --ignore=tests/test_gateway_paper_rag.py \
+    --ignore=tests/test_middleware.py \
+    --ignore=tests/test_langgraph_middleware.py \
+    --cov=src/paper_rag
+
+# Lightweight fallback for environments without pytest
 PYTHONPATH=src:tests python scripts/_run_tests.py
 PYTHONPATH=src python scripts/_run_smoke.py
 

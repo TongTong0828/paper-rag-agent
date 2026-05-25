@@ -1,0 +1,25 @@
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  status:
+    project:
+      default:
+        # Don't fail the build if coverage drops by < 2 percentage points.
+        threshold: 2%
+        target: auto
+    patch:
+      default:
+        # Touched lines should be ≥ 60% covered. Tune up over time.
+        target: 60%
+        threshold: 5%
+
+  ignore:
+    - "tests/eval/**"
+    - "scripts/**"
+    - "src/paper_rag/tools/**"     # thin wrappers, exercised via subagents
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false

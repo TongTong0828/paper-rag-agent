@@ -1,5 +1,10 @@
 """Run all pure-logic tests without pytest.
 
+CI uses real pytest (see .github/workflows/ci.yml). This script is a
+lightweight fallback for environments where you can't or don't want to
+install pytest — it walks the same test modules and runs every ``test_*``
+function in dependency-injection style.
+
 Usage:
     PYTHONPATH=src:tests python scripts/_run_tests.py
 """

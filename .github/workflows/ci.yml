@@ -36,20 +36,38 @@ jobs:
             "ruff==0.15.14" \
             pydantic pydantic-settings pyyaml httpx \
             sqlmodel qdrant-client \
-            python-pptx python-docx
+            python-pptx python-docx \
+            pytest pytest-cov
 
       - name: Ruff check (core rules)
-        # Standalone repo CI focuses on real bugs (E/F/W) + import order (I).
-        # Style nits (B/UP/SIM/RUF) are checked locally via pre-commit.
-        # E501 (line length) is intentionally ignored.
         run: ruff check --select E,F,W,I --ignore E501 src tests
 
-      - name: Pure-logic tests
+      - name: Pytest (pure logic)
         env:
           PYTHONPATH: src:tests
-        run: python scripts/_run_tests.py
+        # Skip:
+        #   tests/eval/                       — needs the eval dataset
+        #   test_gateway_paper_rag / middleware — load files from sibling
+        #                                       deer-flow checkout
+        run: |
+          pytest -q \
+            --ignore=tests/eval \
+            --ignore=tests/test_gateway_paper_rag.py \
+            --ignore=tests/test_middleware.py \
+            --ignore=tests/test_langgraph_middleware.py \
+            --cov=src/paper_rag \
+            --cov-report=xml \
+            --cov-report=term:skip-covered
 
       - name: Smoke import check
         env:
           PYTHONPATH: src
         run: python scripts/_run_smoke.py
+
+      - name: Upload coverage to Codecov
+        # Only on the canonical Python version to avoid quadruple uploads.
+        if: matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false   # codecov outage must not block CI

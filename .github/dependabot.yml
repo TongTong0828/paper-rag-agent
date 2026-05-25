@@ -1,0 +1,36 @@
+# Weekly dependency / action updates.
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+updates:
+  # Python deps declared in pyproject.toml.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+      include: scope
+    groups:
+      # Bunch tooling bumps into a single PR so the queue stays small.
+      tooling:
+        patterns:
+          - "ruff"
+          - "pytest*"
+          - "pre-commit"
+
+  # GitHub Actions versions in .github/workflows/*.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "ci"
+      include: scope
