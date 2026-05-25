@@ -14,7 +14,6 @@ from pathlib import Path
 from .. import config as cfg
 from ..utils.logger import get_logger
 
-
 log = get_logger("retrieve.bm25")
 
 _INDEX = None
@@ -40,9 +39,9 @@ def build_index(force: bool = False) -> _Index:
         return _INDEX
 
     from rank_bm25 import BM25Okapi  # lazy import
+    from sqlmodel import Session, select
 
     from ..store.sqlite_store import Chunk, get_engine
-    from sqlmodel import Session, select
 
     engine = get_engine()
     with Session(engine) as s:

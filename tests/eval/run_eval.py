@@ -29,9 +29,9 @@ from eval.metrics import (  # noqa: E402
     citation_existence_rate,
     citation_precision,
     false_positive_rate,
+    mrr,
     must_contain_score,
     must_not_contain_violations,
-    mrr,
     recall_at_k,
 )
 

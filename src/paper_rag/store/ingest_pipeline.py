@@ -25,7 +25,6 @@ from ..parse.dispatcher import parse_pdf
 from ..utils.logger import get_logger
 from . import qdrant_store, sqlite_store
 
-
 log = get_logger("store.ingest")
 
 

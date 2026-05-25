@@ -9,7 +9,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-
 SUPPORTED_FORMATS = ("markdown_survey", "pptx", "docx", "latex_bib", "pdf")
 
 
@@ -73,4 +72,4 @@ def dispatch(
     raise DeliverError(f"unreachable: {format}")  # pragma: no cover
 
 
-__all__ = ["dispatch", "DeliverableResult", "DeliverError", "SUPPORTED_FORMATS"]
+__all__ = ["SUPPORTED_FORMATS", "DeliverError", "DeliverableResult", "dispatch"]

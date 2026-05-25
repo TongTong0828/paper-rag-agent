@@ -6,11 +6,10 @@ stays cheap. Only `dense` vectors are exposed for now.
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from .. import config as cfg
 from ..utils.logger import get_logger
-
 
 log = get_logger("embed.bge_m3")
 _MODEL = None
@@ -27,6 +26,7 @@ def _model():
             # macOS MPS has aggressive memory allocation issues with bge-m3
             # (seen 23GB allocations); fall back to CPU there.
             import platform
+
             import torch
 
             if platform.system() == "Darwin":

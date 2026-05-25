@@ -16,7 +16,6 @@ from ..utils.paths import paper_dir
 from .schema import FetchResult, PaperMeta
 from .sources import PaperSource
 
-
 log = get_logger("ingest.openalex")
 
 _BASE = "https://api.openalex.org"

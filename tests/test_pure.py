@@ -27,7 +27,9 @@ def test_split_sections_no_header():
 
 def test_multimodal_extract():
     from paper_rag.chunk.multimodal_chunker import (
-        extract_figures, extract_formulas, extract_tables,
+        extract_figures,
+        extract_formulas,
+        extract_tables,
     )
 
     md = (

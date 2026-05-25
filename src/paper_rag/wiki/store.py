@@ -6,12 +6,12 @@ import json
 from datetime import datetime
 from typing import Any
 
-from sqlmodel import Field as SQLField, Session, SQLModel, select
+from sqlmodel import Field as SQLField
+from sqlmodel import Session, SQLModel, select
 
 from .. import config as cfg
 from ..utils.logger import get_logger
 from .schema import Variant, WikiEntry, normalize_name
-
 
 log = get_logger("wiki.store")
 
@@ -139,6 +139,7 @@ def upsert_entry(entry: WikiEntry, *, reason: str = "") -> WikiEntry:
 
 def upsert_qdrant(entry: WikiEntry, vector: list[float]) -> None:
     import hashlib
+
     from qdrant_client.http import models as qm
 
     from ..store.qdrant_store import get_client

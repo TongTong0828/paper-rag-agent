@@ -16,7 +16,6 @@ can later filter out broken parses without re-running everything.
 
 from __future__ import annotations
 
-
 _AREAS = {
     "intro": ["abstract", "introduction", "intro"],
     "method": ["method", "approach", "methodology", "model", "framework", "architecture"],

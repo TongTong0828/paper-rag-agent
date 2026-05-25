@@ -10,7 +10,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-
 _FIGURE_RE = re.compile(r"!\[(?P<alt>[^\]]*)\]\((?P<path>[^)]+)\)")
 _TABLE_BLOCK_RE = re.compile(r"((?:^\|.*\|\s*$\n?)+)", re.MULTILINE)
 _FORMULA_BLOCK_RE = re.compile(r"\$\$(?P<body>.+?)\$\$", re.DOTALL)

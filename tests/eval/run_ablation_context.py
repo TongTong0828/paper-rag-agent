@@ -39,12 +39,13 @@ def parse_args() -> argparse.Namespace:
 
 def _build_temp_collection(suffix: str, *, with_prefix: bool) -> str:
     """Re-embed all chunks from SQLite and upsert into a temp Qdrant collection."""
+    from qdrant_client.http import models as qm
+    from sqlmodel import Session, select
+
     from paper_rag import config as cfg
     from paper_rag.embed import bge_m3
     from paper_rag.store.qdrant_store import get_client
     from paper_rag.store.sqlite_store import Chunk, get_engine
-    from sqlmodel import Session, select
-    from qdrant_client.http import models as qm
 
     c = cfg.load()
     coll = f"{c.qdrant.collection_chunks}_{suffix}_{'ctx' if with_prefix else 'raw'}"

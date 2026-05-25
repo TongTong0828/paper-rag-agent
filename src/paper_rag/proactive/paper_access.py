@@ -17,9 +17,9 @@ from __future__ import annotations
 import logging
 import sqlite3
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
 
 log = logging.getLogger(__name__)
 
@@ -115,4 +115,4 @@ def list_users_with_access() -> list[str]:
     return [r["user_id"] for r in rows]
 
 
-__all__ = ["touch", "touch_many", "stale_for_user", "list_users_with_access"]
+__all__ = ["list_users_with_access", "stale_for_user", "touch", "touch_many"]

@@ -24,10 +24,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from .. import config as cfg
 from ..utils.logger import get_logger
 from .llm import chat
-
 
 log = get_logger("rag.history")
 _TABLE_READY = False

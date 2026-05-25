@@ -10,7 +10,6 @@ from ..rag.qa_agentic import answer
 from ..utils.logger import get_logger
 from ._schema import PaperCompareInput
 
-
 log = get_logger("tool.paper_compare")
 
 

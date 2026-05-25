@@ -5,7 +5,6 @@ from __future__ import annotations
 from .. import config as cfg
 from ..utils.logger import get_logger
 
-
 log = get_logger("wiki.triggers")
 
 

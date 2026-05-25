@@ -21,7 +21,6 @@ from datetime import datetime, timedelta
 from .. import config as cfg
 from ..utils.logger import get_logger
 
-
 log = get_logger("rag.qa_cache")
 _TABLE_READY = False
 

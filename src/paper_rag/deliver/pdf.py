@@ -123,7 +123,7 @@ def generate(
     try:
         pdf_bytes = _reportlab_pdf_bytes(title_str, body_md)
         engine = "reportlab"
-    except Exception:  # noqa: BLE001 — fall back to minimal PDF
+    except Exception:
         pdf_bytes = _fallback_pdf_bytes(title_str, body_md)
         engine = "fallback"
 

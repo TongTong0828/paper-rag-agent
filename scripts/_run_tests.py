@@ -30,11 +30,14 @@ def main() -> int:
         "test_chaos",
         "test_abstain",
         "test_deliver",
-        "test_gateway_paper_rag",
         "test_feedback",
         "test_proactive",
-        "test_middleware",
-        "test_langgraph_middleware",
+        # The next three depend on a sibling deer-flow checkout and are skipped
+        # in the standalone repo CI. Set DEER_FLOW_ROOT and add them back when
+        # running inside the parent monorepo.
+        # "test_gateway_paper_rag",
+        # "test_middleware",
+        # "test_langgraph_middleware",
     ]
     mods = [importlib.import_module(m) for m in mod_names]
     ok = fail = 0

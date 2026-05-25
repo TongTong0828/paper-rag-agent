@@ -9,11 +9,10 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Iterable
+from collections.abc import Iterable
 
 from ..rag.llm import chat
 from ..utils.logger import get_logger
-
 
 log = get_logger("wiki.extract")
 

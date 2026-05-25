@@ -85,4 +85,4 @@ def user_stats(user_id: str) -> dict[str, Any]:
     return store.aggregate_user(user_id)
 
 
-__all__ = ["record_event", "recent_events", "user_stats"]
+__all__ = ["recent_events", "record_event", "user_stats"]

@@ -177,7 +177,8 @@ def test_abstain_no_evidence_skips_llm():
 def test_abstain_weak_evidence_calls_llm_with_hint():
     """weak_evidence band: LLM is still called, but the prompt carries
     an explicit 'evidence may be insufficient' hint."""
-    from paper_rag.rag import qa_agentic, abstain as abstain_mod
+    from paper_rag.rag import abstain as abstain_mod
+    from paper_rag.rag import qa_agentic
 
     captured = {"user_msg": None}
 

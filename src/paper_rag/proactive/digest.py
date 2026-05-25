@@ -150,7 +150,7 @@ def daily_digest_for_user(user_id: str, *, days: int = 1, max_per_keyword: int =
     try:
         from paper_rag.observability.metrics import counter
         counter("paper_rag_proactive_digest_total").inc()
-    except Exception:  # noqa: BLE001 — metrics never block business logic
+    except Exception:
         pass
     log.info("daily_digest written: user=%s n_bullets=%d inbox_id=%d",
              user_id, len(bullets), item_id)
@@ -205,7 +205,7 @@ def daily_digest_for_all_users() -> dict[str, Any]:
 
 
 __all__ = [
-    "daily_digest_for_user",
     "daily_digest_for_all_users",
+    "daily_digest_for_user",
     "render_digest_card",
 ]

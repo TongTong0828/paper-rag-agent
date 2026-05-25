@@ -12,7 +12,6 @@ import hashlib
 import re
 from pathlib import Path
 
-
 _ARXIV_RE = re.compile(r"(\d{4}\.\d{4,5})(v\d+)?")
 
 

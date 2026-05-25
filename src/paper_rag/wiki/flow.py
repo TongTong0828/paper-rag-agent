@@ -18,7 +18,6 @@ from ..utils.logger import get_logger
 from .concept_extractor import _format_chunks
 from .schema import Variant, WikiEntry, make_entry_id
 
-
 log = get_logger("wiki.flow")
 
 

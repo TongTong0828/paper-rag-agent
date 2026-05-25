@@ -9,7 +9,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-
 _HEADER_RE = re.compile(r"^(#{1,4})\s+(.+?)\s*$", re.MULTILINE)
 
 

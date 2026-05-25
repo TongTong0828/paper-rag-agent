@@ -7,7 +7,6 @@ from ..wiki import store as wstore
 from ..wiki.normalize import find_match
 from ._schema import WikiLookupInput
 
-
 log = get_logger("tool.wiki_lookup")
 
 

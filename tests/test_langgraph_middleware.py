@@ -29,7 +29,7 @@ if not hasattr(_typing, "override"):
 
     _typing.override = _noop_override  # type: ignore[attr-defined]
 
-import os  # noqa: E402
+import os
 
 _DEFAULT_ROOT = Path(__file__).resolve().parents[2]
 ROOT = Path(os.environ.get("DEER_FLOW_ROOT", _DEFAULT_ROOT))

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from .. import config as cfg
 from ..utils.logger import get_logger
-
 
 log = get_logger("store.qdrant")
 

@@ -19,7 +19,7 @@ Same hard caps as qa_agentic (max_inner_iters / max_inner_tokens).
 
 from __future__ import annotations
 
-from typing import Generator
+from collections.abc import Generator
 
 from .. import config as cfg
 from ..retrieve.format import format_evidence
@@ -31,7 +31,6 @@ from .citation_check import detect_suspicious_citations, validate_citations
 from .intent_classifier import classify
 from .query_rewrite import rewrite
 from .reflect import reflect
-
 
 log = get_logger("rag.qa_stream")
 

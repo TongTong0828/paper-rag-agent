@@ -7,4 +7,4 @@ Public API:
 from .metrics import counter, histogram, render, reset, snapshot
 from .trace import new_trace_id
 
-__all__ = ["counter", "histogram", "render", "reset", "snapshot", "new_trace_id"]
+__all__ = ["counter", "histogram", "new_trace_id", "render", "reset", "snapshot"]

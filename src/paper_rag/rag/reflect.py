@@ -12,7 +12,6 @@ import re
 from ..utils.logger import get_logger
 from .llm import chat
 
-
 log = get_logger("rag.reflect")
 
 _PROMPT = """You evaluate whether the retrieved evidence is sufficient to answer

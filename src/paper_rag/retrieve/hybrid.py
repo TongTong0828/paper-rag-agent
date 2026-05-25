@@ -8,7 +8,6 @@ from .. import config as cfg
 from ..utils.logger import get_logger
 from . import dense
 
-
 log = get_logger("retrieve.hybrid")
 
 

@@ -16,7 +16,6 @@ from ..utils.paths import paper_dir
 from .schema import FetchResult, PaperMeta
 from .sources import PaperSource
 
-
 log = get_logger("ingest.url")
 
 
@@ -41,7 +40,7 @@ class UrlSource(PaperSource):
             resp.raise_for_status()
             content = resp.content
 
-        tmp = paper_dir(make_paper_id(pdf_path="/dev/null") if False else f"sha1:tmp")
+        tmp = paper_dir(make_paper_id(pdf_path="/dev/null") if False else "sha1:tmp")
         tmp.mkdir(parents=True, exist_ok=True)
         tmp_pdf = tmp / "raw.pdf"
         tmp_pdf.write_bytes(content)

@@ -5,7 +5,6 @@ from __future__ import annotations
 from ..utils.logger import get_logger
 from ._schema import PaperSectionInput
 
-
 log = get_logger("tool.paper_section")
 
 

@@ -11,7 +11,6 @@ from pathlib import Path
 from ..utils.logger import get_logger
 from ..utils.paths import parsed_dir
 
-
 log = get_logger("parse.pymupdf")
 
 

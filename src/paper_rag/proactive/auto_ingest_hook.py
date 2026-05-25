@@ -14,7 +14,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from typing import Iterable
 
 from . import inbox
 
@@ -82,7 +81,7 @@ def _write_inbox_card(arxiv_id: str, user_id: str, result: dict) -> int:
         from paper_rag.observability.metrics import counter
         counter("paper_rag_proactive_auto_ingest_total",
                 {"status": "error" if is_error else "success"}).inc()
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
 
     if is_error:
@@ -138,8 +137,8 @@ def schedule_for_text(text: str, user_id: str) -> list[str]:
 
 
 __all__ = [
-    "detect_arxiv_ids",
     "background_ingest",
     "background_ingest_sync",
+    "detect_arxiv_ids",
     "schedule_for_text",
 ]

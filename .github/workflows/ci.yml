@@ -27,8 +27,11 @@ jobs:
           # (FlagEmbedding, sqlmodel, magic-pdf) are NOT required for CI.
           pip install pydantic pyyaml httpx pydantic-settings ruff
 
-      - name: Ruff check
-        run: ruff check src tests
+      - name: Ruff check (core rules only)
+        # Standalone repo CI focuses on real bugs (E/F/W) + import order (I).
+        # Style nits (B/UP/SIM/RUF) are checked locally via pre-commit.
+        # E501 (line length) is intentionally ignored — see pyproject.toml.
+        run: ruff check --select E,F,W,I --ignore E501 src tests
 
       - name: Pure-logic tests
         env:

@@ -16,7 +16,6 @@ from typing import Any
 
 from ..utils.logger import get_logger
 
-
 log = get_logger("wiki.queue")
 
 _QUEUE: queue.Queue[str] | None = None

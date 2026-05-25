@@ -12,7 +12,6 @@ from ..utils.logger import get_logger
 from .citation_check import detect_suspicious_citations, validate_citations
 from .llm import chat
 
-
 log = get_logger("rag.qa_simple")
 
 _SYSTEM = (

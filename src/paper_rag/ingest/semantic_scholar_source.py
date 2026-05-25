@@ -10,7 +10,6 @@ downloaded when openAccessPdf is provided.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import httpx
 
@@ -19,7 +18,6 @@ from ..utils.logger import get_logger
 from ..utils.paths import paper_dir
 from .schema import FetchResult, PaperMeta
 from .sources import PaperSource
-
 
 log = get_logger("ingest.s2")
 

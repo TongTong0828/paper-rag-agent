@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import re
 
-
 _CITE_RE = re.compile(r"\[chunk:([0-9a-f]{6,40})\]")
 
 # Bracketed numeric like [1], [12]. Avoid matching [chunk:..] (already excluded by

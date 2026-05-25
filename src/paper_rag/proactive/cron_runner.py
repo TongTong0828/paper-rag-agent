@@ -44,7 +44,7 @@ def _job_daily_digest() -> None:
     try:
         result: dict[str, Any] = daily_digest_for_all_users()
         log.info("[cron] daily_digest done: %s", result)
-    except Exception:  # noqa: BLE001 — keep scheduler alive
+    except Exception:
         log.exception("[cron] daily_digest crashed")
 
 
@@ -55,7 +55,7 @@ def _job_stale_scan() -> None:
     try:
         result: dict[str, Any] = stale_scan_for_all_users()
         log.info("[cron] stale_scan done: %s", result)
-    except Exception:  # noqa: BLE001
+    except Exception:
         log.exception("[cron] stale_scan crashed")
 
 

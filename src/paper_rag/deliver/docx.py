@@ -22,8 +22,8 @@ import io
 import logging
 import re
 
-from .dispatch import DeliverableResult
 from . import survey_md
+from .dispatch import DeliverableResult
 
 log = logging.getLogger(__name__)
 
@@ -65,38 +65,32 @@ def _md_to_docx(doc, md: str) -> None:
       blank line → paragraph break
       otherwise → regular paragraph
     """
-    bullet_state = False
+    bullet_state = False  # noqa: F841 - placeholder for future bullet-merging
     for raw in md.splitlines():
         line = raw.rstrip()
         if not line.strip():
-            bullet_state = False
             continue
 
         if line.startswith("# "):
             doc.add_heading(line[2:].strip(), level=1)
-            bullet_state = False
             continue
         if line.startswith("## "):
             doc.add_heading(line[3:].strip(), level=2)
-            bullet_state = False
             continue
         if line.startswith("### "):
             doc.add_heading(line[4:].strip(), level=3)
-            bullet_state = False
             continue
         if line.startswith("> "):
             try:
                 doc.add_paragraph(line[2:].strip(), style="Intense Quote")
             except KeyError:
                 doc.add_paragraph(line[2:].strip())
-            bullet_state = False
             continue
         if line.startswith("- "):
             try:
                 doc.add_paragraph(line[2:].strip(), style="List Bullet")
             except KeyError:
                 doc.add_paragraph("• " + line[2:].strip())
-            bullet_state = True
             continue
         # numbered list (1. xxx)
         m = re.match(r"^\d+\.\s+(.*)$", line)
@@ -105,12 +99,10 @@ def _md_to_docx(doc, md: str) -> None:
                 doc.add_paragraph(m.group(1), style="List Number")
             except KeyError:
                 doc.add_paragraph(m.group(0))
-            bullet_state = True
             continue
         # default: regular paragraph
         text, _cids = _strip_cites(line.strip())
         doc.add_paragraph(text)
-        bullet_state = False
 
 
 def generate(

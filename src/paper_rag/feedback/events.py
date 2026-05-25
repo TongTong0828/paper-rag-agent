@@ -160,6 +160,6 @@ __all__ = [
     "EVENT_TYPES",
     "THUMBS_DOWN_REASONS",
     "FeedbackEvent",
-    "validate_payload",
     "make_event",
+    "validate_payload",
 ]

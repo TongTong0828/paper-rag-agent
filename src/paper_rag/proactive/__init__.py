@@ -35,13 +35,13 @@ from . import (
 )
 
 __all__ = [
-    "subscriptions",
-    "inbox",
-    "paper_access",
-    "digest",
-    "stale",
-    "matcher",
     "auto_ingest_hook",
     "cron_runner",
+    "digest",
+    "inbox",
+    "matcher",
+    "paper_access",
+    "stale",
+    "subscriptions",
     "webhook",
 ]

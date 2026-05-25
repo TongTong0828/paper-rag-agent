@@ -6,7 +6,6 @@ from __future__ import annotations
 import logging
 import sys
 
-
 _INITIALIZED = False
 _USE_LOGURU = False
 

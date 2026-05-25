@@ -14,7 +14,6 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, Field
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config" / "default.yaml"
 
@@ -182,11 +181,11 @@ def load(path: str | Path | None = None) -> AppConfig:
         cfg_path = env_path if env_path.is_absolute() else (PROJECT_ROOT / env_path)
     else:
         cfg_path = DEFAULT_CONFIG_PATH
-    with open(cfg_path, "r", encoding="utf-8") as f:
+    with open(cfg_path, encoding="utf-8") as f:
         raw = yaml.safe_load(f)
     raw = _expand_env(raw)
     raw = _resolve_paths(raw)
     return AppConfig.model_validate(raw)
 
 
-__all__ = ["AppConfig", "load", "PROJECT_ROOT"]
+__all__ = ["PROJECT_ROOT", "AppConfig", "load"]

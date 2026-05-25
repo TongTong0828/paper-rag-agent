@@ -15,7 +15,6 @@ from .. import config as cfg
 from ..utils.logger import get_logger
 from .llm import chat
 
-
 log = get_logger("rag.query_rewrite")
 
 _PROMPT = """You help an academic paper RAG system. Given a question, output a JSON

@@ -10,7 +10,7 @@ from .schema import EvalItem
 
 def load_jsonl(path: str | Path) -> list[EvalItem]:
     items: list[EvalItem] = []
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         for i, line in enumerate(f, 1):
             line = line.strip()
             if not line or line.startswith("#"):

@@ -15,7 +15,6 @@ from .contextual import with_context
 from .section_splitter import split_sections
 from .text_chunker import chunk_text
 
-
 log = get_logger("chunk.builder")
 
 
@@ -25,7 +24,7 @@ def _chunk_id(paper_id: str, section_idx: int, kind: str, ord_: int) -> str:
 
 
 def _section_id(paper_id: str, idx: int) -> str:
-    return hashlib.sha1(f"{paper_id}::sec::{idx}".encode("utf-8")).hexdigest()[:16]
+    return hashlib.sha1(f"{paper_id}::sec::{idx}".encode()).hexdigest()[:16]
 
 
 def build_chunks(paper_id: str, parsed_dir: Path, *, title: str) -> tuple[list[dict], list[dict]]:

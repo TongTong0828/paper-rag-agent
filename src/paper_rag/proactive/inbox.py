@@ -20,9 +20,10 @@ import json
 import logging
 import sqlite3
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 log = logging.getLogger(__name__)
 
@@ -103,7 +104,7 @@ def write(
             "title": title,
             "body_md": body_md,
         })
-    except Exception:  # noqa: BLE001 — outbound network must not affect QA
+    except Exception:
         pass
 
     return item_id
@@ -187,10 +188,10 @@ def purge_older_than(epoch: float) -> int:
 
 __all__ = [
     "INBOX_KINDS",
-    "write",
+    "dismiss",
     "list_for_user",
     "mark_read",
-    "dismiss",
-    "unread_count",
     "purge_older_than",
+    "unread_count",
+    "write",
 ]

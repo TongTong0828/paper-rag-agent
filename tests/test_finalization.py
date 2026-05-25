@@ -59,7 +59,7 @@ def test_histogram_observe_buckets():
 
 
 def test_histogram_quantiles():
-    from paper_rag.observability import histogram, snapshot, reset
+    from paper_rag.observability import histogram, reset, snapshot
 
     reset()
     h = histogram("q_test")

@@ -12,7 +12,6 @@ from sqlmodel import Field, Session, SQLModel, create_engine, select
 from .. import config as cfg
 from ..utils.logger import get_logger
 
-
 log = get_logger("store.sqlite")
 
 

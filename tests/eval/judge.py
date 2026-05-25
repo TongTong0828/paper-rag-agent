@@ -8,7 +8,6 @@ import re
 from paper_rag.rag.llm import chat
 from paper_rag.utils.logger import get_logger
 
-
 log = get_logger("eval.judge")
 
 _PROMPT = """You are evaluating a research-assistant's answer.

@@ -17,9 +17,10 @@ from __future__ import annotations
 import logging
 import sqlite3
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 log = logging.getLogger(__name__)
 
@@ -172,14 +173,14 @@ def iter_active() -> Iterator[dict[str, Any]]:
 
 
 __all__ = [
+    "STRENGTH_THRESHOLD",
     "SUBSCRIPTION_KINDS",
     "SUBSCRIPTION_STRENGTHS",
-    "STRENGTH_THRESHOLD",
     "add",
-    "list_for_user",
-    "get",
     "delete",
-    "toggle",
-    "mark_matched",
+    "get",
     "iter_active",
+    "list_for_user",
+    "mark_matched",
+    "toggle",
 ]

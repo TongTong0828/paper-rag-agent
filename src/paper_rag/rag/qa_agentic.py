@@ -30,7 +30,6 @@ from .llm import chat
 from .query_rewrite import rewrite
 from .reflect import reflect
 
-
 log = get_logger("rag.qa_agentic")
 
 _SYSTEM = (
@@ -63,7 +62,7 @@ def _retrieve_round(query: str, paper_ids: list[str] | None, top_k: int) -> list
 
 def answer(question: str, *, paper_ids: list[str] | None = None,
            conversation_id: str | None = None) -> dict:
-    from ..observability import counter, histogram, new_trace_id
+    from ..observability import histogram, new_trace_id
 
     trace_id = new_trace_id()
     timer = histogram("paper_rag_qa_latency_seconds")

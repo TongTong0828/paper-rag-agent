@@ -42,7 +42,7 @@ Industrial-grade properties
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 # Type alias for clarity
 Decision = str  # one of: confident | weak_evidence | no_evidence | no_chunks
@@ -249,11 +249,11 @@ WEAK_EVIDENCE_HINT = (
 
 
 __all__ = [
+    "DECISION_CONFIDENT",
+    "DECISION_NO_CHUNKS",
+    "DECISION_NO_EVIDENCE",
+    "DECISION_WEAK",
+    "WEAK_EVIDENCE_HINT",
     "decide",
     "evidence_score",
-    "WEAK_EVIDENCE_HINT",
-    "DECISION_CONFIDENT",
-    "DECISION_WEAK",
-    "DECISION_NO_EVIDENCE",
-    "DECISION_NO_CHUNKS",
 ]

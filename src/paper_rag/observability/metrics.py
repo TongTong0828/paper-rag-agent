@@ -22,9 +22,8 @@ from __future__ import annotations
 
 import threading
 import time
+from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import Iterable
-
 
 _LOCK = threading.Lock()
 _COUNTERS: dict[tuple[str, frozenset], float] = {}

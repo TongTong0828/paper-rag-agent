@@ -29,12 +29,12 @@ def test_paper_id_rules():
 
 
 def test_modules_importable():
-    import paper_rag.ingest  # noqa: F401
-    import paper_rag.parse  # noqa: F401
-    import paper_rag.chunk  # noqa: F401
-    import paper_rag.embed  # noqa: F401
-    import paper_rag.store  # noqa: F401
-    import paper_rag.retrieve  # noqa: F401
-    import paper_rag.rag  # noqa: F401
-    import paper_rag.wiki  # noqa: F401
-    import paper_rag.tools  # noqa: F401
+    import paper_rag.chunk
+    import paper_rag.embed
+    import paper_rag.ingest
+    import paper_rag.parse
+    import paper_rag.rag
+    import paper_rag.retrieve
+    import paper_rag.store
+    import paper_rag.tools
+    import paper_rag.wiki
